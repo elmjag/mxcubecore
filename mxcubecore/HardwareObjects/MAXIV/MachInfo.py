@@ -38,6 +38,7 @@ import time
 import PyTango
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.BaseHardwareObjects import Equipment
+import json
 
 
 class MachInfo(Equipment):
@@ -77,7 +78,7 @@ class MachInfo(Equipment):
             # why hwr channel does not work?? why??
             if self.curr_info_channel is None:
                 self.curr_info_channel = PyTango.DeviceProxy(channel_current)
-                curr = self.curr_info_channel.Current
+            curr = self.curr_info_channel.Current
             if curr < 0:
                 self.current = 0.00
             else:
@@ -100,20 +101,33 @@ class MachInfo(Equipment):
             gevent.sleep(2)
             self.message = self.mach_info_channel.OperatorMessage
             self.message += "\n" + self.mach_info_channel.R3NextInjection
-            curr = self.curr_info_channel.Current
+            try:
+                curr = self.curr_info_channel.Current
+            except:
+                curr = 0.00
+
             if curr < 0:
                 self.current = 0.00
             else:
                 self.current = "{:.2f}".format(curr * 1000)
-
-            self.lifetime = float(
-                "{:.2f}".format(self.curr_info_channel.Lifetime / 3600)
-            )
+            try:
+                self.lifetime = float(
+                    "{:.2f}".format(self.curr_info_channel.Lifetime / 3600)
+                )
+            except:
+                self.lifetime = 0.00
 
             self.attention = False
             values = dict()
             values["current"] = self.current
-            values["message"] = self.message
+            msg = ''
+            try:
+                # for avoiding problems when operators feel creative
+                # some encoding problems with greek letters
+                msg = json.dumps(self.message.decode('windows-1252'))
+            except:
+                msg = ''
+            values['message'] = msg
             values["lifetime"] = self.lifetime
             values["attention"] = self.attention
             self.emit("machInfoChanged", values)
@@ -131,8 +145,11 @@ class MachInfo(Equipment):
     def getMessage(self):
         return self.message
 
+    def get_filling_mode(self):
+        return self.filling_mode
 
 def test():
+    import os
     import sys
 
     hwr = HWR.get_hardware_repository()
