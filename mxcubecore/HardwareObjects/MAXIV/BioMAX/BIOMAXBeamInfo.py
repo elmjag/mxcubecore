@@ -94,8 +94,6 @@ class BIOMAXBeamInfo(AbstractBeam):
 
     def beam_size_state_changed(self, value):
         """called if aperture, slits or focusing has been changed"""
-        self._beam_info_dict['state_x'] = self.beam_size_hor.get_state()
-        self._beam_info_dict['state_y'] = self.beam_size_ver.get_state()
         self.re_emit_values()
         self.get_beam_info_dict()
 
@@ -111,30 +109,6 @@ class BIOMAXBeamInfo(AbstractBeam):
         """
         self.evaluate_beam_info()
         return self._beam_size_dict["slits"]
-
-    # def get_beam_info(self):
-    #     """getting beam information
-    #     Returns: 
-    #         dictionary,{size_x:0.1, size_y:0.1, shape:"rectangular"}
-    #     """
-    #     if self.beam_size_hor is not None:
-    #         x = self.beam_size_hor.get_value()
-    #         state_x = self.beam_size_hor.get_state()
-    #         if state_x == 1: state_x = 2
-    #     else:
-    #         x = -1
-    #         state_x = 0
-    #     if self.beam_size_ver is not None:
-    #         y = self.beam_size_ver.get_value()
-    #         state_y = self.beam_size_ver.get_state()
-    #         if state_y == 1: state_y = 2
-    #     else:
-    #         y = -1
-    #         state_y = 0
-    #     _ap = self.aperture_hwobj.get_diameter_size()
-    #     self._beam_info_dict = {"size_x": x / 1000, "size_y": y / 1000, "shape": "ellipse"}
-
-    #     return self._beam_info_dict
 
     def get_value(self):
         """getting beam information, used by frontend
