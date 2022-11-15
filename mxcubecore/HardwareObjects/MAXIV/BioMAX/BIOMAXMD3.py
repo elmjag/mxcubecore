@@ -146,7 +146,6 @@ class BIOMAXMD3(GenericDiffractometer):
             init_trials += 1
         self.channel_dict["CameraExposure"] = camera_exposure
 
-        self.update_zoom_calibration()
 
 
 
@@ -453,22 +452,14 @@ class BIOMAXMD3(GenericDiffractometer):
             kappa = self.motor_hwobj_dict["kappa"]
             phi = self.motor_hwobj_dict["kappa_phi"]
 
-        #        if (c['kappa'], c['kappa_phi']) != (kappa, phi) \
-        #         and self.minikappa_correction_hwobj is not None:
-        #            c['sampx'], c['sampy'], c['phiy'] = self.minikappa_correction_hwobj.shift(
-        # c['kappa'], c['kappa_phi'], [c['sampx'], c['sampy'], c['phiy']], kappa,
-        # phi)
         xy = self.centring_hwobj.centringToScreen(c)
-        # x = (xy['X'] + c['beam_x']) * self.pixels_per_mm_x + \
         x = xy["X"] * self.pixels_per_mm_x + self.zoom_centre["x"]
-        # y = (xy['Y'] + c['beam_y']) * self.pixels_per_mm_y + \
         y = xy["Y"] * self.pixels_per_mm_y + self.zoom_centre["y"]
         return x, y
 
     def osc_scan(self, start, end, exptime, wait=False):
         if self.in_plate_mode():
             scan_speed = math.fabs(end - start) / exptime
-            # todo, JN, get scan_speed limit
             """
             low_lim, hi_lim = map(float, self.scanLimits(scan_speed))
             if start < low_lim:

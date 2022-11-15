@@ -37,9 +37,9 @@ class BIOMAXMicrodiffZoom(AbstractNState):
         gevent.sleep(0.2)
         if value == None:
             value = 1
+        self.predefined_position_attr.set_value(self.VALUES(value).value)
         self.update_value(self.VALUES(value))
         self.re_emit_values()
-        self.predefined_position_attr.set_value(self.VALUES(value).value)
         self.update_state(self.STATES.READY)
 
     def set_limits(self, limits=(None, None)):
@@ -73,7 +73,7 @@ class BIOMAXMicrodiffZoom(AbstractNState):
 
     def state_changed(self, value):
         self._set_value(value)
-        self.emit("valueChanged", (self.get_value(),))
+        self.emit("predefinedPositionChanged", (self.get_value(),0))
         self.emit("limitsChanged", (self.get_limits(),))
         self.emit("stateChanged", (self.get_state(),))
 
