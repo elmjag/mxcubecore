@@ -36,12 +36,12 @@ class BIOMAXZoom(AbstractNState):
         """
         Simulated motor movement.
         """
-        gevent.sleep(0.2)
+        gevent.sleep(1)
         if value == None:
             value = self.VALUES.LEVEL1
         self.predefined_position_attr.set_value(self.VALUES(value).value)
         self.update_value(self.VALUES(value))
-        self.update_state(self.STATES.READY)
+        self.update_state(self.get_state())
 
     def set_limits(self, limits=(None, None)):
         """Overrriden from AbstractActuator"""
@@ -74,11 +74,9 @@ class BIOMAXZoom(AbstractNState):
 
     def value_changed(self, value):
         self._set_value(value)
-        self.update_state(self.STATES.READY)
         self.emit("predefinedPositionChanged", (self.get_value(),0))
 
     def state_changed(self, value):
-        self._set_value(value)
         self.emit("stateChanged", (self.get_state(),))
 
 
