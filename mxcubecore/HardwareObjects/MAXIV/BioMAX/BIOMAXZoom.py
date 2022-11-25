@@ -4,7 +4,7 @@ from mxcubecore.HardwareObjects.abstract.AbstractNState import AbstractNState
 from mxcubecore.HardwareObjects.abstract.AbstractNState import BaseValueEnum
 
 
-class BIOMAXMicrodiffZoom(AbstractNState):
+class BIOMAXZoom(AbstractNState):
     """BIOMAXMicrodiffZoom class"""
 
     def __init__(self, name):
@@ -18,6 +18,10 @@ class BIOMAXMicrodiffZoom(AbstractNState):
         self.value_channel_name = self.get_property("value_channel_name", "")
         self.predefined_position_attr = self.add_channel({"type":"exporter", "name": self.actuator_name  }, self.value_channel_name)
         self.connect(
+                    self.predefined_position_attr, "update", self.value_changed
+                )
+        self.motors_state_attr = self.add_channel({"type":"exporter", "name":self.actuator_name}, "states")
+        self.connect(
                     self.predefined_position_attr, "update", self.state_changed
                 )
 
@@ -26,21 +30,18 @@ class BIOMAXMicrodiffZoom(AbstractNState):
         self._initialise_values()
         self.update_limits(limits)
 
-        self.update_value(self.VALUES.LEVEL1)
         self.update_state(self.STATES.READY)
 
     def _set_zoom(self, value):
         """
         Simulated motor movement.
         """
-        self.update_state(self.STATES.BUSY)
-        gevent.sleep(0.2)
+        gevent.sleep(1)
         if value == None:
-            value = 1
+            value = self.VALUES.LEVEL1
         self.predefined_position_attr.set_value(self.VALUES(value).value)
         self.update_value(self.VALUES(value))
-        self.re_emit_values()
-        self.update_state(self.STATES.READY)
+        self.update_state(self.get_state())
 
     def set_limits(self, limits=(None, None)):
         """Overrriden from AbstractActuator"""
@@ -71,10 +72,11 @@ class BIOMAXMicrodiffZoom(AbstractNState):
             dict(values, **{item.name: item.value for item in BaseValueEnum}),
         )
 
-    def state_changed(self, value):
+    def value_changed(self, value):
         self._set_value(value)
         self.emit("predefinedPositionChanged", (self.get_value(),0))
-        self.emit("limitsChanged", (self.get_limits(),))
+
+    def state_changed(self, value):
         self.emit("stateChanged", (self.get_state(),))
 
 
