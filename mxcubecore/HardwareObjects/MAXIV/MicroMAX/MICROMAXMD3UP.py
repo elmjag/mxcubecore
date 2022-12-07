@@ -88,6 +88,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self._exporter = Exporter(_host, int(_port))
         self.head_type = self._get_head_type
         self.phase_list = eval(self.get_property("phaseList"))
+        self.beam_position = [687, 519]
+        self.centring_hwobj = self.get_object_by_role("centring")
 
     def abort(self):
         """Immediately terminate action."""
@@ -102,7 +104,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         try:
             return self._exporter.read_property("HardwareState")
         except AttributeError:
-            return "Ready"
+            return "UNKNOWN"
 
     @property
     def _get_swstate(self):
@@ -217,10 +219,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         Args:
             value (Enum): DiffractometerPhase member.
         """
-        print('----------------------', )
-        print('----------_set_phase------------', )
-        print('----------------------', )
-        self._exporter.execute("startSetPhase", (value.value,))
+        self._exporter.execute("startSetPhase", (value,))
 
     # def get_phase(self):
     def get_current_phase(self):
@@ -229,11 +228,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
             (Enum): DiffractometerPhase value.
         """
         value = self._exporter.read_property("CurrentPhase")
-        print('----------------------', )
-        print('-----------value-----------', value)
-        print('----------------------', )
         try:
-            self.current_phase = DiffractometerPhase(value)
+            self.current_phase = value
         except ValueError:
             self.current_phase = DiffractometerPhase.UNKNOWN
         return self.current_phase
@@ -243,10 +239,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         Returns:
             list: phase list.
         """
-        return (DiffractometerPhase.CENTRE,
-         DiffractometerPhase.COLLECT,
-         DiffractometerPhase.SEE_BEAM,
-         DiffractometerPhase.TRANSFER)
+        return ('Unknown', 'Centring', 'DataCollection', 'BeamLocation', 'Transfer')
 
 
     def _set_constraint(self, value):
@@ -449,3 +442,65 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         scale_x = self._exporter.read_property("CoaxCamScaleX")
         scale_y = self._exporter.read_property("CoaxCamScaleY")
         return (1.0 / scale_x, 1.0 / scale_y)
+    
+    def get_centred_point_from_coord(self, x, y, return_by_names=None):
+        """
+        Descript. :
+        """
+        self.centring_hwobj.initCentringProcedure()
+        self.centring_hwobj.appendCentringDataPoint(
+            {
+                "X": (x - self.beam_position[0]) / self._exporter.read_property("CoaxCamScaleX"),
+                "Y": (y - self.beam_position[1]) / self._exporter.read_property("CoaxCamScaleY"),
+            }
+        )
+        self.omega_reference_add_constraint()
+        pos = self.centring_hwobj.centeredPosition()
+        if return_by_names:
+            pos = self.convert_from_obj_to_name(pos)
+        return pos
+    
+    
+    def omega_reference_add_constraint(self):
+        """
+        Descript. :
+        """
+        if self.omega_reference_par is None or self.beam_position is None:
+            return
+        if self.omega_reference_par["camera_axis"].lower() == "x":
+            on_beam = (
+                (self.beam_position[0] - self.zoom_centre["x"])
+                * self.omega_reference_par["direction"]
+                / self._exporter.read_property("CoaxCamScaleX")
+                + self.omega_reference_par["position"]
+            )
+        else:
+            on_beam = (
+                (self.beam_position[1] - self.zoom_centre["y"])
+                * self.omega_reference_par["direction"]
+                / self._exporter.read_property("CoaxCamScaleY")
+                + self.omega_reference_par["position"]
+            )
+        self.centring_hwobj.appendMotorConstraint(self.omega_reference_motor, on_beam)
+
+    def convert_from_obj_to_name(self, motor_pos):
+        """
+        """
+        motors = {}
+        for motor_role in self.centring_motors_list:
+            motor_obj = self.get_object_by_role(motor_role)
+            try:
+                motors[motor_role] = motor_pos[motor_obj]
+            except KeyError:
+                if motor_obj:
+                    motors[motor_role] = motor_obj.get_value()
+        motors["beam_x"] = (
+            self.beam_position[0] - self.zoom_centre["x"]
+        ) / self.pixels_per_mm_y
+        motors["beam_y"] = (
+            self.beam_position[1] - self.zoom_centre["y"]
+        ) / self.pixels_per_mm_x
+        return motors
+
+
+
