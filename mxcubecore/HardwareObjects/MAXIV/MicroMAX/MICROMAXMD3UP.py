@@ -59,6 +59,8 @@ Example xml file:
 """
 
 from gevent import Timeout, sleep
+import logging
+
 from mxcubecore.HardwareObjects.abstract.AbstractDiffractometer import (
     AbstractDiffractometer,
     DiffractometerHead,
@@ -502,5 +504,10 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         ) / self.pixels_per_mm_x
         return motors
 
+    def open_fast_shutter(self):
+        logging.getLogger("HWR").info("Openning fast shutter")
+        self.get_nstate_equipment()["fast_shutter"].open()
 
-
+    def close_fast_shutter(self):
+        logging.getLogger("HWR").info("Closing fast shutter")
+        self.get_nstate_equipment()["fast_shutter"].close()
