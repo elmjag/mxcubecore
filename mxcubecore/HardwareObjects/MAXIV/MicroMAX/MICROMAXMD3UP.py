@@ -528,6 +528,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         motors["beam_y"] = (
             self.beam_position[1]
         ) / self._exporter.read_property("CoaxCamScaleX")
+        motors["zoom"] = motors["zoom"].value
         return motors
 
     def open_fast_shutter(self):
