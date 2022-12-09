@@ -1,7 +1,7 @@
 """
-  File:  BIOMAXCollect.py
+  File:  MICROMAXCollect.py
 
-  Description:  This module implements the hardware object for the 
+  Description:  This module implements the hardware object for the
   Biomax data collection
 """
 
@@ -14,12 +14,12 @@ import json
 import PyTango
 import sys
 
-from HardwareRepository.TaskUtils import *
-from HardwareRepository.BaseHardwareObjects import HardwareObject
-from AbstractCollect import AbstractCollect
+from mxcubecore.TaskUtils import *
+from mxcubecore.BaseHardwareObjects import HardwareObject
+from abstract.AbstractCollect import AbstractCollect
 
 
-class BIOMAXCollect(AbstractCollect, HardwareObject):
+class MICROMAXCollect(AbstractCollect, HardwareObject):
     """
     Descript: Data collection class, inherited from AbstractCollect
     """
@@ -30,7 +30,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
         """
         Descript. :
         """
-        AbstractCollect.__init__(self)
+        AbstractCollect.__init__(self, name)
         HardwareObject.__init__(self, name)
 
         self._centring_status = None
@@ -67,32 +67,32 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
         Descript. :
         """
         self.ready_event = gevent.event.Event()
-        self.diffractometer_hwobj = self.getObjectByRole("diffractometer")
-        self.lims_client_hwobj = self.getObjectByRole("dbserver")
-        self.machine_info_hwobj = self.getObjectByRole("mach_info")
-        self.energy_hwobj = self.getObjectByRole("energy")
-        self.resolution_hwobj = self.getObjectByRole("resolution")
-        self.detector_hwobj = self.getObjectByRole("detector")
-        self.flux_hwobj = self.getObjectByRole("flux")
-        self.autoprocessing_hwobj = self.getObjectByRole("auto_processing")
-        self.autoprocessing_hwobj.lims_client_hwobj = self.lims_client_hwobj
-        self.autoprocessing_hwobj.NIMAGES_TRIGGER_AUTO_PROC = self.NIMAGES_TRIGGER_AUTO_PROC
-        self.beam_info_hwobj = self.getObjectByRole("beam_info")
-        self.transmission_hwobj = self.getObjectByRole("transmission")
+        self.diffractometer_hwobj = self.get_object_by_role("diffractometer")
+        self.lims_client_hwobj = self.get_object_by_role("dbserver")
+        self.machine_info_hwobj = self.get_object_by_role("mach_info")
+        self.energy_hwobj = self.get_object_by_role("energy")
+        self.resolution_hwobj = self.get_object_by_role("resolution")
+        self.detector_hwobj = self.get_object_by_role("detector")
+        self.flux_hwobj = self.get_object_by_role("flux")
+        # self.autoprocessing_hwobj = self.get_object_by_role("auto_processing")
+        # self.autoprocessing_hwobj.lims_client_hwobj = self.lims_client_hwobj
+        # self.autoprocessing_hwobj.NIMAGES_TRIGGER_AUTO_PROC = self.NIMAGES_TRIGGER_AUTO_PROC
+        self.beam_info_hwobj = self.get_object_by_role("beam_info")
+        self.transmission_hwobj = self.get_object_by_role("transmission")
         # self.sample_changer_hwobj = self.getObjectByRole("sample_changer")
         # self.sample_changer_maint_hwobj = self.getObjectByRole("sample_changer_maintenance")
-        self.dtox_hwobj = self.getObjectByRole("dtox")
+        self.dtox_hwobj = self.get_object_by_role("dtox")
         # self.detector_cover_hwobj = self.getObjectByRole("detector_cover")
-        self.session_hwobj = self.getObjectByRole("session")
-        self.shape_history_hwobj = self.getObjectByRole("shape_history")
-        self.dozor_hwobj = self.getObjectByRole("dozor")
+        self.session_hwobj = self.get_object_by_role("session")
+        self.shape_history_hwobj = self.get_object_by_role("shape_history")
+        self.dozor_hwobj = self.get_object_by_role("dozor")
         self.datacatalog_enabled = False  # self.getProperty("datacatalog_enabled", False)
         if self.datacatalog_enabled:
-            self.datacatalog_hwobj = self.getObjectByRole("datacatalog")
+            self.datacatalog_hwobj = self.get_object_by_role("datacatalog")
         else:
             self.datacatalog_hwobj = None
-        self.polarisation = float(self.getProperty('polarisation', 0.99))
-        self.gen_thumbnail_script = self.getProperty(
+        self.polarisation = float(self.get_property('polarisation', 0.99))
+        self.gen_thumbnail_script = self.get_property(
             "gen_thumbnail_script",
             "/mxn/groups/sw/mxsw/mxcube_scripts/generate_thumbnail"
             )
@@ -105,7 +105,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
         else:
             self.log.warning("[COLLECT] Datacatalog not enabled")
 
-        self.safety_shutter_hwobj = self.getObjectByRole("safety_shutter")
+        self.safety_shutter_hwobj = self.get_object_by_role("safety_shutter")
         # todo
         # self.fast_shutter_hwobj = self.getObjectByRole("fast_shutter")
         # self.cryo_stream_hwobj = self.getObjectByRole("cryo_stream")
@@ -134,30 +134,31 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
 
         self.set_beamline_configuration(
              synchrotron_name="MAXIV",
-             directory_prefix=self.getProperty("directory_prefix"),
-             default_exposure_time=self.getProperty("default_exposure_time"),
+             directory_prefix=self.get_property("directory_prefix"),
+             default_exposure_time=self.get_property("default_exposure_time"),
              minimum_exposure_time=min_exp,
-             detector_fileext=self.detector_hwobj.getProperty("file_suffix"),
-             detector_type=self.detector_hwobj.getProperty("type"),
-             detector_manufacturer=self.detector_hwobj.getProperty("manufacturer"),
-             detector_model=self.detector_hwobj.getProperty("model"),
+             detector_fileext=self.detector_hwobj.get_property("file_suffix"),
+             detector_type=self.detector_hwobj.get_property("type"),
+             detector_manufacturer=self.detector_hwobj.get_property("manufacturer"),
+             detector_model=self.detector_hwobj.get_property("model"),
              detector_px=pix_x,
              detector_py=pix_y,
-             undulators=self.getProperty('undulator'),
-             focusing_optic=self.getProperty('focusing_optic'),
-             monochromator_type=self.getProperty('monochromator'),
-             beam_divergence_vertical=self.beam_info_hwobj.get_beam_divergence_hor(),
-             beam_divergence_horizontal=self.beam_info_hwobj.get_beam_divergence_ver(),
+             detector_binning_mode="",
+             undulators=self.get_property('undulator'),
+             focusing_optic=self.get_property('focusing_optic'),
+             monochromator_type=self.get_property('monochromator'),
+             beam_divergence_vertical=None,  # self.beam_info_hwobj.get_beam_divergence_hor(),
+             beam_divergence_horizontal=None, # self.beam_info_hwobj.get_beam_divergence_ver(),
              polarisation=self.polarisation,
-             input_files_server=self.getProperty("input_files_server"))
+             input_files_server=self.get_property("input_files_server"))
 
-        self.addChannel({"type": "tango",
-                         "name": 'undulator_gap',
-                         "tangoname": self.getProperty('undulator_gap'),
-                         "timeout": 10000,
-                         },
-                        'Position'
-                        )
+        # self.add_channel({"type": "tango",
+        #                  "name": 'undulator_gap',
+        #                  "tangoname": self.get_property('undulator_gap'),
+        #                  "timeout": 10000,
+        #                  },
+        #                 'Position'
+        #                 )
 
         self.emit("collectReady", (True, ))
 
@@ -230,7 +231,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
 
             # prepare beamline for data acquisiion
             self.prepare_acquisition()
-            self.emit("collectOscillationStarted", (owner, 
+            self.emit("collectOscillationStarted", (owner,
                                                     None,
                                                     None,
                                                     None,
@@ -430,7 +431,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
             oscillation_parameters = self.current_dc_parameters["oscillation_sequence"][0]
             self.open_detector_cover()
 
-            # TODO: investigate gevent.timeout exception handing, this wait is 
+            # TODO: investigate gevent.timeout exception handing, this wait is
             # to ensure that configuration is done before arming
             time.sleep(2)
             try:
@@ -757,6 +758,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
         """
         self.log.info("[COLLECT] triggering auto processing, self.current_dc_parameters: %s" % self.current_dc_parameters)
         self.log.info("[COLLECT] Launching MAXIV Autoprocessing")
+        return
         if self.autoprocessing_hwobj is not None:
             try:
                 self.autoprocessing_hwobj.execute_autoprocessing(process_event,
@@ -788,9 +790,9 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
         """
         try:
             self.log.info("Openning the detector cover.")
-            plc = PyTango.DeviceProxy('b312a/vac/plc-01')        
+            plc = PyTango.DeviceProxy('b312a/vac/plc-01')
             plc.B312A_E06_DIA_DETC01_ENAC = 1
-            plc.B312A_E06_DIA_DETC01_OPC = 1  
+            plc.B312A_E06_DIA_DETC01_OPC = 1
             time.sleep(1) # make sure the cover is up before the data collection stars
         except Exception:
             self.log.exception("Could not open the detector cover")
@@ -804,7 +806,7 @@ class BIOMAXCollect(AbstractCollect, HardwareObject):
             self.log.info("Closing the detector cover")
             plc = PyTango.DeviceProxy('b312a/vac/plc-01')
             plc.B312A_E06_DIA_DETC01_ENAC = 1
-            plc.B312A_E06_DIA_DETC01_CLC = 1        
+            plc.B312A_E06_DIA_DETC01_CLC = 1
         except Exception:
             self.log.exception("Could not close the detector cover")
             pass
