@@ -19,6 +19,7 @@ XML example file
 </object>
 """
 
+
 @unique
 class BeamShape(Enum):
     """Beam shape definitions"""
@@ -26,6 +27,19 @@ class BeamShape(Enum):
     UNKNOWN = "unknown"
     RECTANGULAR = "rectangular"
     ELIPTICAL = "ellipse"
+
+
+@unique
+class HardwareObjectState(Enum):
+    """Enumeration of common states, shared between all HardwareObjects"""
+# probably since BeamInfo inherits from Equipment
+    UNKNOWN = 0
+    WARNING = 1
+    BUSY = 2
+    READY = 3
+    FAULT = 4
+    OFF = 5
+
 
 class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
     def __init__(self, *args):
@@ -37,11 +51,12 @@ class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
         self._beam_label = None
         self._beam_divergence = (None, None)
         self._beam_position_on_screen = [None, None]  # TODO move to sample_view
+
     def init(self):
         self.chan_beam_size_microns = None
         self.chan_beam_shape_ellipse = None
         BeamInfo.BeamInfo.init(self)
-        self._beam_position_on_screen = (500 , 500)
+        self._beam_position_on_screen = (500, 500)
         beam_size_slits = self.get_property("beam_size_slits")
         if beam_size_slits:
             self.beam_size_slits = tuple(map(float, beam_size_slits.split()))
@@ -62,7 +77,6 @@ class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
                 "MICROMAXBeamInfo: " + "beam position not configured"
             )
         self.difrractometer_hwobj = self.get_object_by_role("difrractometer")
-
 
     def get_beam_position(self):
         if self.beam_position == (0, 0):
@@ -97,3 +111,13 @@ class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
         """
         aperture_list = self._aperture.get_diameter_size_list()
         return {"type": ["enum"], "values": aperture_list}
+
+    def get_state(self):
+        """ Getter for state attribute
+
+        Implementations must query the hardware directly, to ensure current results
+
+        Returns:
+            HardwareObjectState
+        """
+        return HardwareObjectState.READY
