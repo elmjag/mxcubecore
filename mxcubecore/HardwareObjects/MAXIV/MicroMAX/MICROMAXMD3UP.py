@@ -92,6 +92,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self.phase_list = eval(self.get_property("phaseList"))
         self.beam_position = [687, 519]
         self.centring_hwobj = self.get_object_by_role("centring")
+        self.omega_reference_par = None
+        self.centring_motors_list = eval(self.get_property("centring_motors"))
 
     def abort(self):
         """Immediately terminate action."""
@@ -497,11 +499,11 @@ class MICROMAXMD3UP(AbstractDiffractometer):
                 if motor_obj:
                     motors[motor_role] = motor_obj.get_value()
         motors["beam_x"] = (
-            self.beam_position[0] - self.zoom_centre["x"]
-        ) / self.pixels_per_mm_y
+            self.beam_position[0]
+        ) / self._exporter.read_property("CoaxCamScaleY")
         motors["beam_y"] = (
-            self.beam_position[1] - self.zoom_centre["y"]
-        ) / self.pixels_per_mm_x
+            self.beam_position[1]
+        ) / self._exporter.read_property("CoaxCamScaleX")
         return motors
 
     def open_fast_shutter(self):
