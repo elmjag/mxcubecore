@@ -529,8 +529,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
 
     def open_fast_shutter(self):
         logging.getLogger("HWR").info("Openning fast shutter")
-        self.get_nstate_equipment()["fast_shutter"].open()
+        self.get_nstate_equipment()["fast_shutter"]._set_value(True)
 
     def close_fast_shutter(self):
         logging.getLogger("HWR").info("Closing fast shutter")
-        self.get_nstate_equipment()["fast_shutter"].close()
+        self.get_nstate_equipment()["fast_shutter"]._set_value(False)
