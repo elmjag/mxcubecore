@@ -177,6 +177,9 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self._exporter.execute("startSimultaneousMoveMotors", (argin,))
         self.wait_ready(timeout)
 
+    def get_positions(self):
+        return self.get_value_motors(self.motors_hwobj_dict)
+
     def get_value_motors(self, motors_list=None):
         """Get the positions of diffractometer motors. If no specific motor
            roles requested in the motors_list argument, return the positions
