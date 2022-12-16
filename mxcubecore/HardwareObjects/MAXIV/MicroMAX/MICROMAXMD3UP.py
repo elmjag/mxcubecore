@@ -60,6 +60,7 @@ Example xml file:
 
 from gevent import Timeout, sleep
 import logging
+import math
 
 from mxcubecore.HardwareObjects.abstract.AbstractDiffractometer import (
     AbstractDiffractometer,
@@ -67,6 +68,7 @@ from mxcubecore.HardwareObjects.abstract.AbstractDiffractometer import (
     DiffractometerPhase,
     DiffractometerConstraint,
 )
+from mxcubecore.HardwareObjects import queue_model_objects
 from mxcubecore.Command.Exporter import Exporter
 from mxcubecore.Command.exporter.ExporterStates import ExporterStates
 
@@ -94,6 +96,9 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self.centring_hwobj = self.get_object_by_role("centring")
         self.omega_reference_par = None
         self.centring_motors_list = eval(self.get_property("centring_motors"))
+        queue_model_objects.CentredPosition.set_diffractometer_motor_names(
+                    *self.centring_motors_list
+                )
 
     def abort(self):
         """Immediately terminate action."""
@@ -163,8 +168,10 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         # prepare the command
         argin = ""
         for role, pos in motors_positions_dict.items():
+            if pos is None:
+                continue
             if role in self.get_movable_motors():
-                name = self.motors_hwobj[role].name
+                name = self.motors_hwobj_dict[role].name
                 argin += f"{name}={pos:0.3f};"
 
         self._exporter.execute("startSimultaneousMoveMotors", (argin,))
@@ -183,6 +190,10 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         if not self.in_kappa_mode:
             motors_positions_dict.update({"kappa": None, "kappa_phi": None})
         return motors_positions_dict
+
+    def get_motors(self):
+        """Get motor_name:Motor dictionary"""
+        return self.motors_hwobj_dict.copy()
 
     def get_movable_motors(self):
         """Get the dictionary of all configured motors or the ones to use.
@@ -461,7 +472,19 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         pos = self.centring_hwobj.centeredPosition()
         if return_by_names:
             pos = self.convert_from_obj_to_name(pos)
+
         return pos
+
+    def motor_positions_to_screen(self, centring_dict):
+        return
+        self.centring_hwobj.centringToScreen(centring_dict)
+
+    def move_omega_relative(self, relative_angle):
+        """
+        Descript. :
+        """
+        _omega = self.motors_hwobj_dict["omega"]
+        _omega._set_value(_omega.get_value() + relative_angle)
 
     def omega_reference_add_constraint(self):
         """
