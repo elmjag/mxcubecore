@@ -17,6 +17,7 @@ import sys
 from mxcubecore.TaskUtils import *
 from mxcubecore.BaseHardwareObjects import HardwareObject
 from abstract.AbstractCollect import AbstractCollect
+from mxcubecore.HardwareObjects.GenericDiffractometer import GenericDiffractometer
 
 
 class MICROMAXCollect(AbstractCollect, HardwareObject):
@@ -193,7 +194,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
             if all(item == None for item in self.current_dc_parameters['motors'].values()):
                 # No centring point defined
                 # create point based on the current position
-                current_diffractometer_position = self.diffractometer_hwobj.getPositions()
+                current_diffractometer_position = self.diffractometer_hwobj.get_positions()
                 for motor in self.current_dc_parameters['motors'].keys():
                     self.current_dc_parameters['motors'][motor] = \
                          current_diffractometer_position[motor]
@@ -206,8 +207,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
             self.user_log.debug("Collection: snapshots taken")
 
             snapshots_files = []
-
-            for key, value in self.current_dc_parameters.iteritems():
+            for key, value in self.current_dc_parameters.items():
                 if key.startswith('xtalSnapshotFullPath'):
                     snapshots_files.append(value)
             try:
@@ -371,7 +371,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         # move MD3 to DataCollection phase if it's not
         if self.diffractometer_hwobj.get_current_phase() != "DataCollection":
             self.user_log.info("Moving Diffractometer to Data Collection")
-            self.diffractometer_hwobj.set_phase("DataCollection", wait=True, timeout=200)
+            self.diffractometer_hwobj.set_phase("DataCollection")
 
         self.flux_before_collect = 0  # self.get_instant_flux()
         self.estimated_flux_before_collect = 0  # self.get_estimated_flux()
@@ -379,9 +379,9 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         if float(self.flux_before_collect) < 1:
             self.user_log.error("Collection: Flux is 0, please check the beam!!")
 
-        self.diffractometer_hwobj.wait_device_ready(5)
+        self.diffractometer_hwobj.wait_ready(5)
         self.move_to_centered_position()
-        self.diffractometer_hwobj.wait_device_ready(5)
+        self.diffractometer_hwobj.wait_ready(5)
 
         self.log.info("Updating data collection in LIMS with data: %s" % self.current_dc_parameters)
         self.update_data_collection_in_lims()
@@ -725,14 +725,14 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
                     self.log.exception("Collection: Error creating snapshot directory")
 
             # for plate head, takes only one image
-            if self.diffractometer_hwobj.head_type == self.diffractometer_hwobj.HEAD_TYPE_PLATE:
+            if self.diffractometer_hwobj.head_type == GenericDiffractometer.HEAD_TYPE_PLATE:
                 number_of_snapshots = 1
             else:
                 number_of_snapshots = 4 #4 take only one image for the moment
             self.user_log.info("Collection: Taking %d sample snapshot(s)" % number_of_snapshots)
             if self.diffractometer_hwobj.get_current_phase() != "Centring":
                 self.user_log.info("Moving Diffractometer to CentringPhase")
-                self.diffractometer_hwobj.set_phase("Centring", wait=True, timeout=200)
+                self.diffractometer_hwobj.set_phase("Centring")
                 self.move_to_centered_position()
 
             for snapshot_index in range(number_of_snapshots):
@@ -861,7 +861,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         Descript. :
         """
         # take image from server
-        self.diffractometer_hwobj.camera_hwobj.takeSnapshot(filename)
+        self.diffractometer_hwobj.complex_hwobj_dict["camera"].take_snapshot(filename)
 
     def set_detector_roi(self, value):
         """
@@ -907,7 +907,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         """
         Descript. :
         """
-        self.diffractometer_hwobj.move_sync_motors(motor_position_dict)
+        self.diffractometer_hwobj.set_value_motors(motor_position_dict)
 
     def create_file_directories(self):
         """
@@ -969,7 +969,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         Descript. : move detector to the set distance
         """
         lower_limit, upper_limit = self.get_detector_distance_limits()
-        self.log.info("...................value %s, detector movement start..... %s" % (value, self.dtox_hwobj.getPosition()))
+        self.log.info("...................value %s, detector movement start..... %s" % (value, self.dtox_hwobj.get_value()))
         if upper_limit is not None and lower_limit is not None:
             if value >= upper_limit or value <= lower_limit:
                 self.log.exception("Can't move detector, the value is out of limits")
@@ -984,9 +984,9 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
                     self.stop_collect()
         else:
             self.log.exception("Can't get distance limits, not moving detector!!")
-        self.log.info("....................value %s detector movement finished.....%s" % (value, self.dtox_hwobj.getPosition()))
+        self.log.info("....................value %s detector movement finished.....%s" % (value, self.dtox_hwobj.get_value()))
 
-        current_pos = self.dtox_hwobj.getPosition()
+        current_pos = self.dtox_hwobj.get_value()
         if abs(current_pos - value) > 0.05:
             self.user_log.exception("Detector didn't go to the set position")
             self.stop_collect()
@@ -996,7 +996,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         Descript. :
         """
         if self.dtox_hwobj is not None:
-            return self.dtox_hwobj.getPosition()
+            return self.dtox_hwobj.get_value()
 
     def get_detector_distance_limits(self):
         """
@@ -1205,7 +1205,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         if manual_mode:
             if self.detector_cover_hwobj is not None:
                self.close_detector_cover()
-            self.diffractometer_hwobj.set_phase("Transfer", wait=False)
+            self.diffractometer_hwobj.set_phase("Transfer")
             if self.safety_shutter_hwobj is not None and self.safety_shutter_hwobj.getShutterState() == 'opened':
                 self.close_safety_shutter()
         self.move_detector(800)
@@ -1256,6 +1256,9 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
 
     def enable_datacatalog(self, enable):
         self.datacatalog_enabled = enable
+
+    def get_resolution_at_corner(self):
+        return self.resolution_hwobj.get_value_at_corner()
 
     def update_data_collection_in_lims(self):
         """
