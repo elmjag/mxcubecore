@@ -223,9 +223,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         Args:
             value (Enum): DiffractometerPhase member.
         """
-        self._exporter.execute("startSetPhase", (value,))
+        self._exporter.write_property("CurrentPhase", value.value)
 
-    # def get_phase(self):
     def get_current_phase(self):
         """Get the current phase
         Returns:
@@ -237,7 +236,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         except ValueError:
             self.current_phase = DiffractometerPhase.UNKNOWN
         return self.current_phase
-    
+
     def get_phase_list(self):
         """Get the list of available phases
         Returns:
@@ -446,7 +445,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         scale_x = self._exporter.read_property("CoaxCamScaleX")
         scale_y = self._exporter.read_property("CoaxCamScaleY")
         return (1.0 / scale_x, 1.0 / scale_y)
-    
+
     def get_centred_point_from_coord(self, x, y, return_by_names=None):
         """
         Descript. :
@@ -463,8 +462,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         if return_by_names:
             pos = self.convert_from_obj_to_name(pos)
         return pos
-    
-    
+
     def omega_reference_add_constraint(self):
         """
         Descript. :
