@@ -170,9 +170,9 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         for role, pos in motors_positions_dict.items():
             if pos is None:
                 continue
-            if role in self.get_movable_motors():
-                name = self.motors_hwobj_dict[role].name
-                argin += f"{name}={pos:0.3f};"
+            if role.lower() in self.get_movable_motors():
+                name = role
+                argin += f"{name}={pos:0.3f},"
 
         self._exporter.execute("startSimultaneousMoveMotors", (argin,))
         self.wait_ready(timeout)
@@ -538,3 +538,13 @@ class MICROMAXMD3UP(AbstractDiffractometer):
     def close_fast_shutter(self):
         logging.getLogger("HWR").info("Closing fast shutter")
         self.get_nstate_equipment()["fast_shutter"]._set_value(False)
+
+    def move_motors(self, motor_positions, timeout=15):
+        """
+        Moves diffractometer motors to the requested positions
+
+        :param motors_dict: dictionary with motor names or hwobj
+                            and target values.
+        :type motors_dict: dict
+        """
+        self.set_value_motors(motor_positions, timeout=timeout)
