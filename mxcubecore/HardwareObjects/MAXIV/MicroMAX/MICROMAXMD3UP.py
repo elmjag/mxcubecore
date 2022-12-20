@@ -129,7 +129,9 @@ class MICROMAXMD3UP(AbstractDiffractometer):
             (enum 'HardwareObjectState'): state
         """
         try:
-            self._state = ExporterStates(self._get_swstate)
+            for s in ExporterStates:
+                if self._exporter.execute("getState").upper() == s.value.name:
+                    self._state = s.value
         except ValueError:
             self._state = self.STATES.UNKNOWN
         return self._state
