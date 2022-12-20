@@ -481,8 +481,14 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         return pos
 
     def motor_positions_to_screen(self, centring_dict):
-        return
-        self.centring_hwobj.centringToScreen(centring_dict)
+
+
+        xy = self.centring_hwobj.centringToScreen(centring_dict)
+        # x = xy["X"] * self._exporter.read_property("CoaxCamScaleX") + self.zoom_centre["x"]
+        x = xy["X"] * self._exporter.read_property("CoaxCamScaleX") 
+        # y = xy["Y"] * self._exporter.read_property("CoaxCamScaleY") + self.zoom_centre["y"]
+        y = xy["Y"] * self._exporter.read_property("CoaxCamScaleY") 
+        return x, y
 
     def move_omega_relative(self, relative_angle):
         """
