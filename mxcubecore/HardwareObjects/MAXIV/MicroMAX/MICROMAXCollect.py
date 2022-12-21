@@ -514,7 +514,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
                                                   invert_direction=1,
                                                   wait=wait)
         else:
-            self.diffractometer_hwobj.osc_scan(start, end, exptime, wait=wait)
+            self.diffractometer_hwobj.do_oscillation_scan(start, end, exptime)
 
     def _update_task_progress(self):
         '''
