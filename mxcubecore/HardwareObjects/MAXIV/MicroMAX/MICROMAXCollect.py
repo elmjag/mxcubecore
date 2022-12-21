@@ -378,9 +378,9 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         if float(self.flux_before_collect) < 1:
             self.user_log.error("Collection: Flux is 0, please check the beam!!")
 
-        self.diffractometer_hwobj.wait_ready(5)
+        self.diffractometer_hwobj._wait_ready(5)
         self.move_to_centered_position()
-        self.diffractometer_hwobj.wait_ready(5)
+        self.diffractometer_hwobj._wait_ready(5)
 
         self.log.info("Updating data collection in LIMS with data: %s" % self.current_dc_parameters)
         self.update_data_collection_in_lims()
@@ -491,7 +491,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
     def oscil(self, start, end, exptime, npass, wait=True):
         time.sleep(1)
         oscillation_parameters = self.current_dc_parameters["oscillation_sequence"][0]
-        msg = "[BIOMAXCOLLECT] Oscillation requested oscillation_parameters: %s" % oscillation_parameters
+        msg = "[MICROMAXCOLLECT] Oscillation requested oscillation_parameters: %s" % oscillation_parameters
         self.log.info(msg)
 
         if self.helical:
@@ -519,7 +519,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         '''
         Emit signals to follow the acquisition progress
         '''
-        self.log.info("[BIOMAXCOLLECT] update task progress launched")
+        self.log.info("[MICROMAXCOLLECT] update task progress launched")
         num_images = self.current_dc_parameters['oscillation_sequence'][0]['number_of_images']
         if self.current_dc_parameters.get('experiment_type') == 'Mesh':
             shape_id = self.get_current_shape_id()
@@ -540,7 +540,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         while step_count < num_steps:
             time.sleep(exp_time * step_size)
             current_frame += step_size
-            self.log.info("[BIOMAXCOLLECT] collectImageTaken %s (%s, %s, %s)" %(current_frame, num_images, step_size, step_count))
+            self.log.info("[MICROMAXCOLLECT] collectImageTaken %s (%s, %s, %s)" %(current_frame, num_images, step_size, step_count))
             self.emit("collectImageTaken", current_frame)
             step_count += 1
 
@@ -592,7 +592,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         if self.char:
             # stop char converter
             self.char = False
-        self.diffractometer_hwobj.wait_device_ready(5)
+        self.diffractometer_hwobj._wait_ready(5)
 
         # estimate the flux at sample position
         self.estimated_flux_after_collect = self.get_estimated_flux()
