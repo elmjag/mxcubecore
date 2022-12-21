@@ -177,7 +177,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
                 argin += f"{name}={pos:0.3f},"
 
         self._exporter.execute("startSimultaneousMoveMotors", (argin,))
-        self.wait_ready(timeout)
+        self._wait_ready(timeout)
 
     def get_positions(self):
         return self.get_value_motors(self.motors_hwobj_dict)
