@@ -146,6 +146,9 @@ class MICROMAXMD3UP(AbstractDiffractometer):
             return True
         return False
 
+    def wait_ready(self, timeout=None):
+        self._wait_ready(timeout=timeout)
+
     def _wait_ready(self, timeout=None):
         """Wait timeout seconds until status is ready.
         Args:
@@ -234,12 +237,31 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         except ValueError:
             return DiffractometerHead.UNKNOWN
 
+    def set_phase(self, phase, wait=False, timeout=None):
+        """Sets diffractometer to selected phase.
+        Args:
+            value (Enum): DiffractometerPhase value.
+            timeout (float): optional - timeout [s],
+                             If timeout = 0: return at once and do not wait;
+                             if timeout is None: wait forever (default).
+        """
+        if isinstance(phase, DiffractometerPhase):
+            self.current_phase = phase
+        else:
+            self.current_phase = self.value_to_enum(phase, DiffractometerPhase)
+        if self.current_phase != DiffractometerPhase.UNKNOWN:
+            self._exporter.write_property("CurrentPhase", self.current_phase.value)
+            self._update_value(value_cmp=self.get_phase())
+            if timeout == 0:
+                return
+            self.wait_ready(timeout)
+
     def _set_phase(self, value):
         """Specific implementation to set the diffractometer to selected phase
         Args:
             value (Enum): DiffractometerPhase member.
         """
-        self._exporter.write_property("CurrentPhase", value.value)
+        self.set_phase(value)
 
     def get_current_phase(self):
         """Get the current phase
