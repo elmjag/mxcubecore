@@ -36,6 +36,7 @@ import logging
 from io import BytesIO
 import gevent
 import numpy as np
+import warnings
 
 try:
     import cv2
@@ -49,10 +50,7 @@ module_names = ["qt", "PyQt5", "PyQt4"]
 
 if any(mod in sys.modules for mod in module_names):
     USEQT = True
-    try:
-        from PyQt5.QtGui import QImage, QPixmap, QSize
-    except ImportError:
-        from PyQt4.QtGui import QImage, QPixmap, QSize
+    from mxcubecore.utils.qt_import import QPixmap, QImage, QSize
 else:
     USEQT = False
     from PIL import Image
@@ -168,10 +166,10 @@ class AbstractVideoDevice(HardwareObject):
         return self.cam_name
 
     def polling_ended(self, gl=None):
-        logging.getLogger("HWR").info("Polling ended for qt4 camera")
+        logging.getLogger("HWR").info("Polling ended for qt camera")
 
     def polling_ended_exc(self, gl=None):
-        logging.getLogger("HWR").info("Polling ended exception for qt4 camera")
+        logging.getLogger("HWR").info("Polling ended exception for qt camera")
 
     # -------- Generic methods --------
 
@@ -290,6 +288,16 @@ class AbstractVideoDevice(HardwareObject):
             jpgstr = self.get_jpg_image()
             open(filename, "w").write(jpgstr)
 
+    def take_snapshot(self, bw=None, return_as_array=True):
+        """Take the snapshot.
+        Args:
+            bs(bool): Return grayscale image (True)
+            return_as_array(bool): Return the image as array. Default is True.
+        Returns:
+            (): Snapshot image.
+        """
+        self.get_snapshot(bw, return_as_array)
+
     def get_snapshot(self, bw=None, return_as_array=True):
         """Get the snapshot.
         Args:
@@ -298,6 +306,9 @@ class AbstractVideoDevice(HardwareObject):
         Returns:
             (): Snapshot image.
         """
+        warnings.warn(
+            "Deprecated method, call take_snapshot instead", DeprecationWarning
+        )
         if not USEQT:
             print("get snapshot not implemented yet for non-qt mode")
             return None
@@ -344,7 +355,7 @@ class AbstractVideoDevice(HardwareObject):
 
     def change_owner(self):
         """LIMA specific, because it has to be root at startup
-           move this to Qt4_LimaVideo
+        move this to Qt4_LimaVideo
         """
         if os.getuid() == 0:
             try:
@@ -426,7 +437,7 @@ class AbstractVideoDevice(HardwareObject):
 
     @abc.abstractmethod
     def get_image(self):
-        """ The implementing class should return here the latest_image in
+        """The implementing class should return here the latest_image in
         raw_format, followed by the width and height of the image"""
 
     @abc.abstractmethod

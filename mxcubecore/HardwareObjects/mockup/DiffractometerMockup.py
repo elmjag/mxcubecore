@@ -17,31 +17,25 @@
 #   You should have received a copy of the GNU Lesser General Public License
 #  along with MXCuBE. If not, see <http://www.gnu.org/licenses/>.
 
-import enum
 import time
 import logging
 import random
 import warnings
 
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from mxcubecore.HardwareObjects.GenericDiffractometer import (
     GenericDiffractometer,
+    PhaseEnum,
+    PhaseModel,
+    HeadTypeEnum,
+    BlockShapeEnum,
+    SampleHolderSectionModel,
+    GonioHeadConfiguration,
 )
-from mxcubecore import HardwareRepository as HWR
+
+from mxcubecore import HardwareObjects, HardwareRepository as HWR
 from gevent.event import AsyncResult
-
-
-class PhaseEnum(str, enum.Enum):
-    centring = "Centring"
-    data_collection = 'DataCollection'
-    beam_location = 'BeamLocation'
-    transfer = "Transfer"
-    unknown = "Unknown"
-
-
-class PhaseModel(BaseModel):
-    value: PhaseEnum = PhaseEnum.unknown
 
 
 class DiffractometerMockup(GenericDiffractometer):
@@ -350,8 +344,8 @@ class DiffractometerMockup(GenericDiffractometer):
             "endTime": curr_time,
         }
         motors = self.get_positions()
-        #motors["beam_x"] = 0.1
-        #motors["beam_y"] = 0.1
+        # motors["beam_x"] = 0.1
+        # motors["beam_y"] = 0.1
         self.last_centred_position[0] = coord_x
         self.last_centred_position[1] = coord_y
         self.centring_status["motors"] = motors
@@ -407,9 +401,18 @@ class DiffractometerMockup(GenericDiffractometer):
 
     def status(self) -> str:
         return "READY"
-    
-    def my_fancy_function(self, speed: float, num_images:int, exp_time:float, phase:PhaseEnum) -> bool:
+
+    def my_fancy_function(
+        self, speed: float, num_images: int, exp_time: float, phase: PhaseEnum
+    ) -> bool:
         return True
-    
+
     def my_other_funny_function(self) -> None:
         pass
+
+    def ssx_chip_scan(self, parameters):
+        return
+
+    def move_chip_to(self, x: int, y: int) -> None:
+        print("moving chip to")
+        return

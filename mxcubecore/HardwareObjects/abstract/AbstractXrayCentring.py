@@ -30,12 +30,11 @@ import abc
 
 from mxcubecore.BaseHardwareObjects import HardwareObjectYaml
 from mxcubecore import HardwareRepository as HWR
-from mxcubecore.HardwareObjects import queue_model_objects
+from mxcubecore.model import queue_model_objects
 
 
 class AbstractXrayCentring(HardwareObjectYaml):
-    """Xray Centring Hardware Object. Set to Yaml configuration.
-    """
+    """Xray Centring Hardware Object. Set to Yaml configuration."""
 
     def __init__(self, name):
         super().__init__(name)
@@ -87,8 +86,7 @@ class AbstractXrayCentring(HardwareObjectYaml):
         """
 
     def post_execute(self):
-        """The workflow has finished, sets the state to 'READY'.
-        """
+        """The workflow has finished, sets the state to 'READY'."""
 
         self._queue_entry = None
         self._data_collection_group = None
