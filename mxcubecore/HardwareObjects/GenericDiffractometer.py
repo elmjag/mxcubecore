@@ -1486,4 +1486,3 @@ class GenericDiffractometer(HardwareObject):
                     )
 
         return data
->>>>>>> github/develop
