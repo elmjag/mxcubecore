@@ -2348,6 +2348,19 @@ convention = "google"
     "EXE002",
     "RET504",
 ]
+"mxcubecore/HardwareObjects/MAXIV/MD3UpCamera.py" = [
+    "ARG002",
+    "COM812",
+    "E501",
+    "FBT002",
+    "G004",
+    "N999",
+    "RUF005",
+    "S101",
+    "S603",
+    "S607",
+    "TRY300",
+]
 "mxcubecore/HardwareObjects/MD2Motor.py" = [
     "B028",
     "B904",
