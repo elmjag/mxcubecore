@@ -47,13 +47,13 @@ class MaxIVSession(Session):
         self.base_directory = self["file_info"].getProperty('base_directory')
         self.remote_address = self.getProperty('remote_address')
         self.base_process_directory = self["file_info"].\
-            getProperty('processed_data_base_directory')
+            get_property('processed_data_base_directory')
 
         self.raw_data_folder_name = self["file_info"].\
-            getProperty('raw_data_folder_name')
+            get_property('raw_data_folder_name')
 
         self.processed_data_folder_name = self["file_info"].\
-            getProperty('processed_data_folder_name')
+            get_property('processed_data_folder_name')
 
         try:
             self.in_house_users = self.getProperty("inhouse_users").split(',')
