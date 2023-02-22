@@ -134,10 +134,18 @@ class BIOMAXMD3(GenericDiffractometer):
             camera_exposure = self.add_channel({"type": "exporter","name": "CameraExposure"}, "CameraExposure")
             init_trials += 1
         self.channel_dict["CameraExposure"] = camera_exposure
-
+        self.motors_hwobj_dict = self.motor_hwobj_dict  # making sampleView happy
         # self.update_zoom_calibration()
 
+    def wait_ready(self, timeout=30):
+        """Waits when diffractometer status is ready:
 
+        :param timeout: timeout in second
+        :type timeout: int
+        """
+        with gevent.Timeout(timeout, Exception("Timeout waiting for device ready")):
+            while not self.is_ready():
+                time.sleep(0.01)
 
     def current_phase_changed(self, current_phase):
         """
@@ -171,7 +179,7 @@ class BIOMAXMD3(GenericDiffractometer):
 
     def move_fluo_in(self, wait=True):
         logging.getLogger("HWR").info("Moving Fluo detector in")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.fluodet.actuatorIn()
         time.sleep(3) # MD3 reports long before fluo is in position
         # the next lines are irrelevant, leaving there for future use
@@ -182,7 +190,7 @@ class BIOMAXMD3(GenericDiffractometer):
 
     def move_fluo_out(self, wait=True):
         logging.getLogger("HWR").info("Moving Fluo detector out")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.fluodet.actuatorOut()
         if wait:
             with gevent.Timeout(10, Exception("Timeout waiting for fluo detector Out")):
@@ -219,6 +227,9 @@ class BIOMAXMD3(GenericDiffractometer):
         """
         Descript. :
         """
+        if self.pixels_per_mm_x is None:
+            self.update_zoom_calibration()
+
         self.centring_hwobj.initCentringProcedure()
         for click in range(3):
             self.user_clicked_event = gevent.event.AsyncResult()
@@ -251,7 +262,7 @@ class BIOMAXMD3(GenericDiffractometer):
 
         surface_score_list = []
         self.zoom_motor_hwobj.move_to_position("Zoom 1")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.centring_hwobj.initCentringProcedure()
         for image in range(BIOMAXMD3.AUTOMATIC_CENTRING_IMAGES):
             x, y, score = self.find_loop()
@@ -266,12 +277,12 @@ class BIOMAXMD3(GenericDiffractometer):
             self.phi_motor_hwobj.set_value_relative(
                 360.0 / BIOMAXMD3.AUTOMATIC_CENTRING_IMAGES
             )
-            self.wait_device_ready(5)
+            self.wait_ready(5)
         self.omega_reference_add_constraint()
         return self.centring_hwobj.centeredPosition(return_by_name=False)
 
     def automatic_centring(self):
-        self.wait_device_ready(10)
+        self.wait_ready(10)
         # move MD3 to Centring phase if it's not
         if self.get_current_phase() != "Centring":
             logging.info("Moving Diffractometer to Centring for automatic_centring")
@@ -280,7 +291,7 @@ class BIOMAXMD3(GenericDiffractometer):
         time.sleep(1)
         centred_pos = self.do_automatic_centring(2)
         self.zoom_motor_hwobj.move_to_position("Zoom 4")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         return centred_pos
     def do_automatic_centring(self, cycle=3):
         """Automatic centring procedure. Rotates n times and executes
@@ -291,7 +302,7 @@ class BIOMAXMD3(GenericDiffractometer):
         i = 0
         while -1 in self.find_loop():
             self.phi_motor_hwobj.set_value_relative(90)
-            self.wait_device_ready(time_out)
+            self.wait_ready(time_out)
             i += 1
             if i > 4:
                 self.emit_progress_message("No loop detected, aborting")
@@ -308,7 +319,7 @@ class BIOMAXMD3(GenericDiffractometer):
                     for i in range(1, 6):
                         # logging.info("loop not found - moving back %d" % i)
                         self.phi_motor_hwobj.set_value_relative(15)
-                        self.wait_device_ready(time_out)
+                        self.wait_ready(time_out)
                         x, y, score = self.find_loop()
                         surface_score_list.append(score)
                         if -1 in (x, y):
@@ -339,7 +350,7 @@ class BIOMAXMD3(GenericDiffractometer):
                     if -1 in (x, y):
                         raise RuntimeError("Could not centre sample automatically.")
                     self.phi_motor_hwobj.set_value_relative(-i*15)
-                    self.wait_device_ready(time_out)
+                    self.wait_ready(time_out)
                 else:
                     self.centring_hwobj.appendCentringDataPoint(
                         {
@@ -348,13 +359,13 @@ class BIOMAXMD3(GenericDiffractometer):
                         }
                     )
                 self.phi_motor_hwobj.set_value_relative(90)
-                self.wait_device_ready(time_out)
+                self.wait_ready(time_out)
 
             self.omega_reference_add_constraint()
             centred_pos = self.centring_hwobj.centeredPosition(return_by_name=False)
             if k < 2:
                 self.move_to_centred_position(centred_pos)
-                self.wait_device_ready(time_out)
+                self.wait_ready(time_out)
         return centred_pos
 
     def find_loop(self):
@@ -450,7 +461,7 @@ class BIOMAXMD3(GenericDiffractometer):
         y = xy["Y"] * self.pixels_per_mm_y + self.zoom_centre["y"]
         return x, y
 
-    def osc_scan(self, start, end, exptime, wait=False):
+    def do_oscillation_scan(self, start, end, exptime, wait=False):
         if self.in_plate_mode():
             scan_speed = math.fabs(end - start) / exptime
             """
@@ -466,7 +477,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "[BIOMAXMD3] MD3 oscillation requested, waiting device ready..., params "
             + str(scan_params)
         )
-        self.wait_device_ready(200)
+        self.wait_ready(200)
         logging.getLogger("HWR").info(
             "[BIOMAXMD3] MD3 oscillation requested, device ready."
         )
@@ -480,7 +491,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "[BIOMAXMD3] MD3 oscillation launched, waiting for device ready."
         )
         time.sleep(0.1)
-        self.wait_device_ready(exptime+30)
+        self.wait_ready(exptime+30)
         logging.getLogger("HWR").info("[BIOMAXMD3] MD3 oscillation, device ready.")
 
     def osc_scan_4d(self, start, end, exptime, helical_pos, wait=False):
@@ -517,7 +528,7 @@ class BIOMAXMD3(GenericDiffractometer):
         if not wait:
             return
         time.sleep(0.1)
-        self.wait_device_ready(exptime+30)
+        self.wait_ready(exptime+30)
 
     def raster_scan(
         self,
@@ -580,7 +591,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "[BIOMAXMD3] MD3 raster oscillation requested, waiting device ready"
         )
 
-        self.wait_device_ready(200)
+        self.wait_ready(200)
         logging.getLogger("HWR").info(
             "[BIOMAXMD3] MD3 raster oscillation requested, device ready."
         )
@@ -591,7 +602,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "[BIOMAXMD3] MD3 raster oscillation launched, waiting for device ready."
         )
         time.sleep(0.1)
-        self.wait_device_ready((exptime +3) * nlines)
+        self.wait_ready((exptime +3) * nlines)
         logging.getLogger("HWR").info(
             "[BIOMAXMD3] MD3 finish raster scan, device ready."
         )
@@ -599,7 +610,7 @@ class BIOMAXMD3(GenericDiffractometer):
     def set_phase(self, phase, wait=False, timeout=None):
         current_positions = {}
         try:
-            self.wait_device_ready(10)
+            self.wait_ready(10)
         except Exception as ex:
             logging.getLogger("HWR").error(
                 "[BIOMAXMD3] Cannot change phase to %s, timeout waiting for MD3 ready, %s"
@@ -613,7 +624,7 @@ class BIOMAXMD3(GenericDiffractometer):
             if wait:
                 if not timeout:
                     timeout = 40
-                self.wait_device_ready(timeout)
+                self.wait_ready(timeout)
 
     # def move_sync_motors(self, motors_dict, wait=False, timeout=None):
     def move_sync_motors(self, motors_dict, wait=True, timeout=30):
@@ -630,11 +641,11 @@ class BIOMAXMD3(GenericDiffractometer):
             argin += "%s=%0.3f;" % (name, position)
         if not argin:
             return
-        self.wait_device_ready(2000)
+        self.wait_ready(2000)
         self.command_dict["startSimultaneousMoveMotors"](argin)
         # task_info = self.command_dict["getTaskInfo"](task_id)
         if wait:
-            self.wait_device_ready(timeout)
+            self.wait_ready(timeout)
 
     def move_to_Beam(self, x, y):
         try:
@@ -651,7 +662,7 @@ class BIOMAXMD3(GenericDiffractometer):
                 -1 * (y - beam_yc) / float(self.pixelsPerMmZ)
             )
             self.cent_vertical_pseudo_motor.set_value(cent_vertical_to_move)
-            self.wait_device_ready(5)
+            self.wait_ready(5)
         except:
             logging.getLogger("HWR").exception("MD3: could not move to beam.")
 
@@ -691,7 +702,6 @@ class BIOMAXMD3(GenericDiffractometer):
         Detects if device is ready
         """
         return self.channel_dict["State"].get_value() == DiffractometerState.tostring(
-            # return self.current_state == DiffractometerState.tostring(\
             DiffractometerState.Ready
         )
 
@@ -709,7 +719,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "kappa_phi": float(self.kappa_phi_motor_hwobj.get_value())
             if self.kappa_phi_motor_hwobj
             else None,
-            "zoom": float(self.zoom_motor_hwobj.get_value().value),
+            "zoom": float(self.zoom_motor_hwobj.get_value()),
         }
 
     def set_calculate_flux_phase(self):
@@ -730,18 +740,18 @@ class BIOMAXMD3(GenericDiffractometer):
             self.set_phase("DataCollection", wait=True, timeout=200)
         self.channel_dict["AlignmentTablePosition"].set_value("CLEAR_SCINTILLATOR")
         self.beamstop_z._set_value(85)
-        self.wait_device_ready(10)
+        self.wait_ready(10)
         return ori_motors, ori_phase
 
     def finish_calculate_flux(self, ori_motors, ori_phase = "DataCollection"):
         self.set_phase(ori_phase, wait=True, timeout=200)
-        self.wait_device_ready(10)
+        self.wait_ready(10)
         if ori_phase == "DataCollection":
             self.channel_dict["BeamstopPosition"].set_value("BEAM")
-        self.wait_device_ready(10)
+        self.wait_ready(10)
         if ori_motors is not None:
             self.move_sync_motors(ori_motors)
-            self.wait_device_ready(10)
+            self.wait_ready(10)
 
     def centring_done(self, centring_procedure):
         GenericDiffractometer.centring_done(self,centring_procedure)
@@ -751,7 +761,7 @@ class BIOMAXMD3(GenericDiffractometer):
         """
         save the current position as centered position in MD3
         """
-        self.wait_device_ready(10)
+        self.wait_ready(10)
         self.command_dict["saveCentringPositions"]()
         logging.getLogger("HWR").info("saving centered positions in MD3.")
         self.last_centered_position = self.get_positions()
@@ -777,16 +787,16 @@ class BIOMAXMD3(GenericDiffractometer):
         """
         self.channel_dict["CryoIsOut"].set_value(value)
         if wait:
-            self.wait_device_ready(2)
+            self.wait_ready(2)
 
     def move_rex_out(self, wait=True, timeout = 3):
         logging.getLogger("HWR").info("Moving REX out")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.rex.actuatorIn(wait = wait, timeout = timeout)
 
     def move_rex_in(self, wait=True, timeout = 3):
         logging.getLogger("HWR").info("Moving REX in")
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.rex.actuatorOut(wait = wait, timeout = timeout)
 
     def set_unmount_sample_phase(self, wait=True):
@@ -794,10 +804,10 @@ class BIOMAXMD3(GenericDiffractometer):
         without changing the current MD3 phase, park beamstop, capillary, scintillator
         and set aperture to off position
         """
-        self.wait_device_ready(3)
+        self.wait_ready(3)
         self.command_dict["startMoveOrganDevices"]("OFF\tPARK\tPARK\tPARK")
         if wait:
-            self.wait_device_ready(30)
+            self.wait_ready(30)
 
     def move_motors(self, motor_positions, timeout=15):
         """
@@ -821,7 +831,7 @@ class BIOMAXMD3(GenericDiffractometer):
                 if motor is None:
                     continue
             motor.set_value(position)
-        self.wait_device_ready(timeout)
+        self.wait_ready(timeout)
 
 def test():
     '''
@@ -886,7 +896,7 @@ def test():
     print('    ')
     print('    ')
     print('| Osc scan: ')
-    hwr_diff.osc_scan(8, 18, .5, wait=False)
+    hwr_diff.do_oscillation_scan(8, 18, .5, wait=False)
     print('    ')
     print('    ')
     print('| rex hwobj actuator state: ', hwr_diff.rex.get_actuator_state(read=True))
