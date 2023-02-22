@@ -14,7 +14,7 @@ except ImportError:
     raise Exception('Cannot import SDM library.')
 
 from Session import Session
-import queue_model_objects_v1 as queue_model_objects
+from mxcubecore.model import queue_model_objects
 
 # proposal types from DUO
 PROPOSAL_TYPES = {'H': 'in-house',
