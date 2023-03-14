@@ -508,6 +508,7 @@ class HardwareObjectMixin(CommandContainer):
             )
 
             self._pydantic_models[attr_name] = _models[attr_name][0]
+            self._exported_attributes[attr_name]["display"] = True
             self._exported_attributes[attr_name]["signature"] = self._exports[attr_name]
             self._exported_attributes[attr_name]["schema"] = self._pydantic_models[
                 attr_name
@@ -521,7 +522,7 @@ class HardwareObjectMixin(CommandContainer):
             cmd = getattr(self, cmd_name)
         else:
             self.log.info(
-                f"Command {cmd} not exported, check type hints and configuration file"
+                f"Command {cmd_name} not exported, check type hints and configuration file"
             )
 
         return cmd(**args)
