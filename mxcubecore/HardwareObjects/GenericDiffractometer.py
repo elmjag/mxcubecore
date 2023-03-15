@@ -1083,7 +1083,7 @@ class GenericDiffractometer(HardwareObject):
         if not isinstance(motor_positions, dict):
             motor_positions = motor_positions.as_dict()
 
-        self.wait_ready(timeout)
+        # self.wait_ready(timeout)
 
         for motor in motor_positions.keys():
             position = motor_positions[motor]
@@ -1103,14 +1103,14 @@ class GenericDiffractometer(HardwareObject):
                     continue
                 # motor_positions[motor] = position
             motor.set_value(position)
-        self.wait_ready(timeout)
+        # self.wait_ready(timeout)
 
         if self.delay_state_polling is not None and self.delay_state_polling > 0:
             # delay polling for state in the
             # case of controller not reporting MOVING inmediately after cmd
             gevent.sleep(self.delay_state_polling)
 
-        self.wait_ready(timeout)
+        # self.wait_ready(timeout)
 
     def move_motors_done(self, move_motors_procedure):
         """
