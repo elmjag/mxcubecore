@@ -5,7 +5,7 @@ from mxcubecore.HardwareObjects.ExporterMotor import ExporterMotor
 # monkey.patch_all(thread=False)
 
 
-class MICRIMAXLight(ExporterMotor):
+class MICROMAXLight(ExporterMotor):
     """Class for MD3 Light devices. 
     """
 
