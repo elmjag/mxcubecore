@@ -623,6 +623,17 @@ class GenericDiffractometer(HardwareObject):
         with gevent.Timeout(timeout, Exception("Timeout waiting for device not ready")):
             while self.is_ready():
                 time.sleep(0.01)
+    def wait_device_ready(self, timeout=30):
+        """Waits when diffractometer status is ready:
+
+        :param timeout: timeout in second
+        :type timeout: int
+        """
+        with gevent.Timeout(timeout, Exception("Timeout waiting for device ready")):
+            while not self.is_ready():
+                time.sleep(0.01)
+
+    wait_ready = wait_device_ready
 
     def execute_server_task(self, method, timeout=30, *args):
         """Method is used to execute commands and wait till
@@ -638,7 +649,7 @@ class GenericDiffractometer(HardwareObject):
         method(*args)
         time.sleep(5)
         # gevent.sleep(2)
-        self.wait_ready(timeout)
+        self.wait_device_ready(timeout)
         self.ready_event.set()
 
     def in_plate_mode(self):
@@ -1070,7 +1081,7 @@ class GenericDiffractometer(HardwareObject):
         )
         self.move_to_motors_positions_procedure.link(self.move_motors_done)
         if wait:
-            self.wait_ready(10)
+            self.wait_device_ready(10)
 
     def move_motors(self, motor_positions, timeout=15):
         """
@@ -1083,7 +1094,7 @@ class GenericDiffractometer(HardwareObject):
         if not isinstance(motor_positions, dict):
             motor_positions = motor_positions.as_dict()
 
-        # self.wait_ready(timeout)
+        self.wait_device_ready(timeout)
 
         for motor in motor_positions.keys():
             position = motor_positions[motor]
@@ -1103,14 +1114,14 @@ class GenericDiffractometer(HardwareObject):
                     continue
                 # motor_positions[motor] = position
             motor.set_value(position)
-        # self.wait_ready(timeout)
+        self.wait_device_ready(timeout)
 
         if self.delay_state_polling is not None and self.delay_state_polling > 0:
             # delay polling for state in the
             # case of controller not reporting MOVING inmediately after cmd
             gevent.sleep(self.delay_state_polling)
 
-        # self.wait_ready(timeout)
+        self.wait_device_ready(timeout)
 
     def move_motors_done(self, move_motors_procedure):
         """
