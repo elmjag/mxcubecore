@@ -69,7 +69,6 @@ class BIOMAXMD3(GenericDiffractometer):
         self.image_height = None
         # self.image_width = self.camera.get_width()
         # self.image_height = self.camera.get_height()
-        print(self.motor_hwobj_dict)
         self.phi_motor_hwobj = self.motor_hwobj_dict["phi"]
         self.phiz_motor_hwobj = self.motor_hwobj_dict["phiz"]
         self.phiy_motor_hwobj = self.motor_hwobj_dict["phiy"]
@@ -234,7 +233,6 @@ class BIOMAXMD3(GenericDiffractometer):
         for click in range(3):
             self.user_clicked_event = gevent.event.AsyncResult()
             x, y = self.user_clicked_event.get()
-            print(x, y)
             self.centring_hwobj.appendCentringDataPoint(
                 {
                     "X": (x - self.beam_position[0]) / self.pixels_per_mm_x,
@@ -252,7 +250,6 @@ class BIOMAXMD3(GenericDiffractometer):
                     self.phi_motor_hwobj.set_value_relative(90)
         self.omega_reference_add_constraint()
         cpos = self.centring_hwobj.centeredPosition(return_by_name=False)
-        print(cpos)
         return cpos
 
     def automatic_centring_old(self):
@@ -434,17 +431,6 @@ class BIOMAXMD3(GenericDiffractometer):
             self.reference_pos = (-10, pos)
         self.emit("omegaReferenceChanged", (self.reference_pos,))
 
-    def move_to_motors_positions(self, motors_positions, wait = False):
-        """
-        """
-        try:
-            motors_positions.pop('zoom')
-        except:
-            pass
-        self.emit_progress_message("Moving to motors positions...")
-        self.move_to_motors_positions_procedure = gevent.spawn(\
-             self.move_motors, motors_positions)
-        self.move_to_motors_positions_procedure.link(self.move_motors_done)
 
     def motor_positions_to_screen(self, centred_positions_dict):
         """
@@ -719,7 +705,7 @@ class BIOMAXMD3(GenericDiffractometer):
             "kappa_phi": float(self.kappa_phi_motor_hwobj.get_value())
             if self.kappa_phi_motor_hwobj
             else None,
-            "zoom": float(self.zoom_motor_hwobj.get_value()),
+            "zoom": float(self.zoom_motor_hwobj.get_value().value),
         }
 
     def set_calculate_flux_phase(self):
@@ -752,10 +738,6 @@ class BIOMAXMD3(GenericDiffractometer):
         if ori_motors is not None:
             self.move_sync_motors(ori_motors)
             self.wait_ready(10)
-
-    def centring_done(self, centring_procedure):
-        GenericDiffractometer.centring_done(self,centring_procedure)
-        self.save_centered_position()
 
     def save_centered_position(self):
         """
@@ -809,29 +791,6 @@ class BIOMAXMD3(GenericDiffractometer):
         if wait:
             self.wait_ready(30)
 
-    def move_motors(self, motor_positions, timeout=15):
-        """
-        Moves diffractometer motors to the requested positions
-
-        :param motors_dict: dictionary with motor names or hwobj
-                            and target values.
-        :type motors_dict: dict
-        """
-        if self.head_type == GenericDiffractometer.HEAD_TYPE_PERMANENT:
-            try:
-                motor_positions.pop('kappa')
-                motor_positions.pop('kappa_phi')
-            except:
-                pass
-        for motor in motor_positions.keys():
-            position = motor_positions[motor]
-            if type(motor)==str:
-                motor_role = motor
-                motor = self.motor_hwobj_dict[motor_role]
-                if motor is None:
-                    continue
-            motor.set_value(position)
-        self.wait_ready(timeout)
 
 def test():
     '''
@@ -843,7 +802,7 @@ def test():
 
     '''
     from mxcubecore import HardwareRepository as HWR
-    hwr_dir='../mxcubecore/mxcubecore/configuration/MAXIV'
+    hwr_dir='cfg-maxiv-mxcubecore/MicroMAX'
     HWR.init_hardware_repository(hwr_dir)
     hwr = HWR.get_hardware_repository()
     hwr_diff = hwr.get_hardware_object("md3/minidiff")
