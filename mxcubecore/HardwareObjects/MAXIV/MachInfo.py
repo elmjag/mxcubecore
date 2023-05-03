@@ -37,32 +37,25 @@ import gevent
 import time
 import PyTango
 from mxcubecore import HardwareRepository as HWR
-from mxcubecore.BaseHardwareObjects import Equipment
+from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import (
+    AbstractMachineInfo,
+)
 import json
 
 
-class MachInfo(Equipment):
-    default_current = 0
-    default_lifetime = 0
-    default_message = ""
-    default_topup_remaining = 0
+class MachInfo(AbstractMachineInfo):
 
     def __init__(self, *args):
-        Equipment.__init__(self, *args)
-        default_current = 0
-        default_lifetime = 0
-        default_message = ""
-        default_topup_remaining = 0
-        self.current = self.default_current
-        self.lifetime = self.default_lifetime
-        self.message = self.default_message
+        AbstractMachineInfo.__init__(self, *args)
+        self.current = 0
+        self.lifetime = 0
+        self.message = ""
 
         self.mach_info_channel = None
         self.mach_curr_channel = None
 
     def init(self):
         try:
-            # self.mach_info_channel =  self.get_channel_object("mach_info")
             channel = self.get_property("mach_info")
             self.mach_info_channel = PyTango.DeviceProxy(channel)
             self.message = self.mach_info_channel.OperatorMessage
@@ -98,7 +91,7 @@ class MachInfo(Equipment):
         self.t0 = time.time()
 
         while True:
-            gevent.sleep(2)
+            gevent.sleep(10)
             self.message = self.mach_info_channel.OperatorMessage
             self.message += "\n" + self.mach_info_channel.R3NextInjection
             try:
@@ -125,24 +118,27 @@ class MachInfo(Equipment):
                 # for avoiding problems when operators feel creative
                 # some encoding problems with greek letters
                 msg = json.dumps(self.message.decode('windows-1252'))
+                if msg is None: msg = ''
             except:
                 msg = ''
-            values['message'] = msg
+            self.message = msg
+            values['message'] = self.message
             values["lifetime"] = self.lifetime
             values["attention"] = self.attention
+
             self.emit("machInfoChanged", values)
             self.emit("valueChanged", values)
 
     def get_current(self):
         return self.current
 
-    def getLifeTime(self):
+    def get_lifeTime(self):
         return self.lifetime
 
-    def getTopUpRemaining(self):
+    def get_topup_remaining(self):
         return self.topup_remaining
 
-    def getMessage(self):
+    def get_message(self):
         return self.message
 
     def get_filling_mode(self):
