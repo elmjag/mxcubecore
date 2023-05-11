@@ -71,6 +71,10 @@ class MD3UpCamera(HardwareObject):
         # video client disconnected, stop fetching images
         self._poll_images = False
 
+    def take_snapshot(self, path, grayscale=False):
+        _, _, jpg_data = self._get_jpg_image()
+        Path(path).write_bytes(jpg_data)
+
     def _get_frame(self):
         """
         read one frame from tango device
