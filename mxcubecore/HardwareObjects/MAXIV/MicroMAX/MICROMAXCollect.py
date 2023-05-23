@@ -774,8 +774,8 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         """
         Descript. :
         """
-        if self.resolution_hwobj is not None:
-            return self.resolution_hwobj.get_beam_centre()
+        if self.detector_hwobj is not None:
+            return self.detector_hwobj.get_beam_position()
         else:
             return None, None
 
@@ -887,7 +887,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         """
         Descript. :
         """
-        new_distance = self.resolution_hwobj.res2dist(value)
+        new_distance = self.resolution_hwobj.resolution_to_distance(value)
         self.move_detector(new_distance)
 
     def set_energy(self, value):
