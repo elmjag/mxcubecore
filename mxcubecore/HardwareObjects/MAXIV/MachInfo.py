@@ -41,16 +41,19 @@ from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import (
     AbstractMachineInfo,
 )
 import json
+import re
+CLEANR = re.compile('<.*?>')
+
+
+def cleanhtml(raw_html):
+  cleantext = re.sub(CLEANR, '', raw_html)
+  return cleantext
 
 
 class MachInfo(AbstractMachineInfo):
 
     def __init__(self, *args):
         AbstractMachineInfo.__init__(self, *args)
-        self.current = 0
-        self.lifetime = 0
-        self.message = ""
-
         self.mach_info_channel = None
         self.mach_curr_channel = None
 
@@ -58,30 +61,14 @@ class MachInfo(AbstractMachineInfo):
         try:
             channel = self.get_property("mach_info")
             self.mach_info_channel = PyTango.DeviceProxy(channel)
-            self.message = self.mach_info_channel.OperatorMessage
-            self.message += "\n" + self.mach_info_channel.R3NextInjection
         except Exception as ex:
             logging.getLogger("HWR").warning("Error initializing machine info channel")
 
         try:
-            # self.curr_info_channel =  self.get_channel_object("curr_info")
             channel_current = self.get_property("current")
             self.curr_info_channel = PyTango.DeviceProxy(channel_current)
-            # why twice??
-            # why hwr channel does not work?? why??
-            if self.curr_info_channel is None:
-                self.curr_info_channel = PyTango.DeviceProxy(channel_current)
-            curr = self.curr_info_channel.Current
-            if curr < 0:
-                self.current = 0.00
-            else:
-                self.current = "{:.2f}".format(curr * 1000)
-            self.lifetime = float(
-                "{:.2f}".format(self.curr_info_channel.Lifetime / 3600)
-            )
         except Exception as ex:
             logging.getLogger("HWR").warning("Error initializing current info channel")
-
         self._run()
 
     def _run(self):
@@ -89,78 +76,48 @@ class MachInfo(AbstractMachineInfo):
 
     def _update_me(self):
         self.t0 = time.time()
-
         while True:
             gevent.sleep(10)
-            self.message = self.mach_info_channel.OperatorMessage
-            self.message += "\n" + self.mach_info_channel.R3NextInjection
+            _machine_message = cleanhtml(self.mach_info_channel.MachineMessage)
+            _machine_message = _machine_message.replace('R1', '\nR1')
+            _machine_message = _machine_message.replace('Linac', '\nLinac')
+            self._message = _machine_message
+            self._message += "\nOperator mesage: " + cleanhtml(self.mach_info_channel.OperatorMessage)
+            self._message += "\nNext injection: " + self.mach_info_channel.R3NextInjection
+            self._topup_remaining = self.mach_info_channel.R3TopUp
             try:
                 curr = self.curr_info_channel.Current
             except:
                 curr = 0.00
 
             if curr < 0:
-                self.current = 0.00
+                self._current = 0.00
             else:
-                self.current = "{:.2f}".format(curr * 1000)
+                self._current = "{:.2f}".format(curr * 1000)
             try:
-                self.lifetime = float(
+                self._lifetime = float(
                     "{:.2f}".format(self.curr_info_channel.Lifetime / 3600)
                 )
             except:
-                self.lifetime = 0.00
+                self._lifetime = 0.00
 
             self.attention = False
             values = dict()
-            values["current"] = self.current
-            msg = ''
-            try:
-                # for avoiding problems when operators feel creative
-                # some encoding problems with greek letters
-                msg = json.dumps(self.message.decode('windows-1252'))
-                if msg is None: msg = ''
-            except:
-                msg = ''
-            self.message = msg
-            values['message'] = self.message
-            values["lifetime"] = self.lifetime
+            values["current"] = self._current
+            values['message'] = self._message
+            values["lifetime"] = self._lifetime
             values["attention"] = self.attention
-
             self.emit("machInfoChanged", values)
             self.emit("valueChanged", values)
 
     def get_current(self):
-        return self.current
+        return self._current
 
     def get_lifeTime(self):
-        return self.lifetime
+        return self._lifetime
 
     def get_topup_remaining(self):
-        return self.topup_remaining
+        return self._topup_remaining
 
     def get_message(self):
-        return self.message
-
-    def get_filling_mode(self):
-        return self.filling_mode
-
-def test():
-    import os
-    import sys
-
-    hwr = HWR.get_hardware_repository()
-    hwr.connect()
-
-    conn = hwr.get_hardware_object(sys.argv[1])
-
-    print("Machine current: ", conn.get_current())
-    print("Life time: ", conn.getLifeTime())
-    print("TopUp remaining: ", conn.getTopUpRemaining())
-    print("Message: ", conn.getMessage())
-
-    while True:
-        gevent.wait(timeout=0.1)
-
-
-if __name__ == "__main__":
-    test()
+        return self._message
