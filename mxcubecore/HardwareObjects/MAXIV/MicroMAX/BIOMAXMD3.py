@@ -160,7 +160,7 @@ class BIOMAXMD3(GenericDiffractometer):
     def state_changed(self, state):
         logging.getLogger("HWR").debug("State changed %s" % str(state))
         self.current_state = state
-        self.emit("minidiffStateChanged", (self.current_state))
+        self.emit("valueChanged", (self.current_state))
 
     def motor_state_changed(self, state):
         """
