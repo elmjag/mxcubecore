@@ -51,7 +51,7 @@ class CollectEmulator(CollectMockup):
     # def init(self):
     #     CollectMockup.init(self)
     #     # NBNB you get an error if you use 'HWR.beamline.session'
-    #     # session_hwobj = self.getObjectByRole("session")
+    #     # session_hwobj = self.get_object_by_role("session")
     #     session = HWR.beamline.session
     #     if session and self.has_object("override_data_directories"):
     #         dirs = self["override_data_directories"].get_properties()
@@ -75,19 +75,11 @@ class CollectEmulator(CollectMockup):
             instrument_input = f90nml.read(fp0)
 
             self.instrument_data = instrument_input["sdcp_instrument_list"]
-            self.segments = instrument_input["segment_list"]
+            self.segments = instrument_input.get("segment_list")
 
         #
         # # update with instrument data
-        # fp0 = HWR.beamline.gphl_workflow.file_paths.get("instrumentation_file")
-        # instrument_input = f90nml.read(fp0)
         #
-        # instrument_data = instrument_input["sdcp_instrument_list"]
-        # segments = instrument_input["segment_list"]
-        if isinstance(self.segments, dict):
-            segment_count = 1
-        else:
-            segment_count = len(self.segments)
 
         sweep_count = len(data_collect_parameters["oscillation_sequence"])
 
@@ -161,12 +153,17 @@ class CollectEmulator(CollectMockup):
 
         setup_data["n_vertices"] = 0
         setup_data["n_triangles"] = 0
-        setup_data["n_segments"] = segment_count
         setup_data["n_orients"] = 0
         setup_data["n_sweeps"] = sweep_count
 
         # Add segments
-        result["segment_list"] = self.segments
+        if self.segments:
+            if isinstance(self.segments, dict):
+                segment_count = 1
+            else:
+                segment_count = len(self.segments)
+            setup_data["n_segments"] = segment_count
+            result["segment_list"] = self.segments
 
         # Adjustments
         val = self.instrument_data.get("beam")
@@ -269,10 +266,10 @@ class CollectEmulator(CollectMockup):
         data_collect_parameters = self.current_dc_parameters
 
         if not HWR.beamline.gphl_workflow:
-            raise ValueError("Emulator requires GPhL workflow installation")
+            raise ValueError("Emulator requires GΦL workflow installation")
         gphl_connection = HWR.beamline.gphl_connection
         if not gphl_connection:
-            raise ValueError("Emulator requires GPhL connection installation")
+            raise ValueError("Emulator requires GΦL connection installation")
 
         # Get program locations
         simcal_executive = gphl_connection.get_executable("simcal")
@@ -329,9 +326,7 @@ class CollectEmulator(CollectMockup):
         for tag, val in self["simcal_options"].get_properties().items():
             command_list.extend(conversion.command_option(tag, val, prefix="--"))
         logging.getLogger("HWR").info("Executing command: %s", " ".join(command_list))
-        logging.getLogger("HWR").info(
-            "Executing environment: %s" % sorted(envs.items())
-        )
+        logging.getLogger("HWR").info("Executing environment: %s", sorted(envs.items()))
 
         if compress_data:
             command_list.append("--gzip-img")
@@ -361,7 +356,7 @@ class CollectEmulator(CollectMockup):
             # NBNB TODO put in time-out, somehow
             return_code = running_process.wait()
         except Exception:
-            logging.getLogger("HWR").error("Error in GPhL collection emulation")
+            logging.getLogger("HWR").error("Error in GΦL collection emulation")
             raise
         finally:
             fp1.close()
@@ -376,5 +371,5 @@ class CollectEmulator(CollectMockup):
         else:
             logging.getLogger("HWR").info("Simcal collection emulation successful")
         self.ready_event.set()
-
+        #
         return

@@ -7,6 +7,7 @@ import os
 import math
 import logging
 
+from mxcubecore.model.queue_model_objects import PathTemplate
 from mxcubecore.TaskUtils import task
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.HardwareObjects.abstract.AbstractDetector import AbstractDetector
@@ -258,3 +259,31 @@ class LimaEigerDetector(AbstractDetector):
 
     def recover_from_failure(self):
         pass
+
+    def get_image_file_name(self, pt, suffix=None):
+        pt.precision = 1
+        template = "%s_%s_%%" + str(pt.precision) + "d_master.%s"
+
+        if suffix:
+            file_name = template % (pt.get_prefix(), pt.run_number, suffix)
+        else:
+            file_name = template % (pt.get_prefix(), pt.run_number, pt.suffix)
+        if pt.compression:
+            file_name = "%s.gz" % file_name
+
+        return file_name
+
+    def get_first_and_last_file(self, pt: PathTemplate):
+        """
+        Get complete path to first and last image
+
+        Args:
+          pt (PathTempalte): Path template parameter
+
+        Returns:
+        (Tuple): Tuple containing first and last image path (first, last)
+        """
+        start_num = int(math.ceil(pt.start_num / 100))
+        end_num = int(math.ceil((pt.start_num + pt.num_files - 1) / 100))
+
+        return (pt.get_image_path() % start_num, pt.get_image_path() % end_num)

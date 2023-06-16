@@ -25,7 +25,6 @@ from __future__ import print_function, unicode_literals
 
 import logging
 import os
-import socket
 import subprocess
 import uuid
 import signal
@@ -36,6 +35,7 @@ from py4j import clientserver, java_gateway
 
 from mxcubecore.utils import conversion
 from mxcubecore.HardwareObjects.Gphl import GphlMessages
+from mxcubecore.model import crystal_symmetry
 
 from mxcubecore.BaseHardwareObjects import HardwareObjectYaml
 from mxcubecore import HardwareRepository as HWR
@@ -49,10 +49,11 @@ import socket
 origsocket = sys.modules.pop("socket")
 _origsocket = sys.modules.pop("_socket")
 import socket
+
 java_gateway.socket = socket
 clientserver.socket = socket
 sys.modules["socket"] = origsocket
-sys.modules["_socket"] =_origsocket
+sys.modules["_socket"] = _origsocket
 del origsocket
 del _origsocket
 
@@ -83,8 +84,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
     """
 
     def __init__(self, name):
-        super(GphlWorkflowConnection, self).__init__(name)
-
+        super().__init__(name)
         # Py4J gateway to external workflow program
         self._gateway = None
 
@@ -108,11 +108,8 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         self.update_state(self.STATES.UNKNOWN)
 
-    def _init(self):
-        super(GphlWorkflowConnection, self)._init()
-
     def init(self):
-        super(GphlWorkflowConnection, self).init()
+        super().init()
 
         # Adapt connections if we are running via ssh
         if self.ssh_options:
@@ -134,9 +131,11 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         paths["GPHL_INSTALLATION"] = locations["GPHL_INSTALLATION"]
         if "java_binary" not in paths:
             paths["java_binary"] = "java"
-        paths["gphl_java_classpath"] = (
-            "%s/ASTRAWorkflows/config:%s/ASTRAWorkflows/lib/*"
-            % (installdir, installdir)
+        paths[
+            "gphl_java_classpath"
+        ] = "%s/ASTRAWorkflows/config:%s/ASTRAWorkflows/lib/*" % (
+            installdir,
+            installdir,
         )
 
         for tag, val in properties.items():
@@ -148,9 +147,13 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             paths[tag] = properties[tag] = val2
 
         # Set master location, based on known release directory structure
-        properties["co.gphl.wf.bin"] = os.path.join(locations["GPHL_INSTALLATION"], "exe")
+        properties["co.gphl.wf.bin"] = os.path.join(
+            locations["GPHL_INSTALLATION"], "exe"
+        )
         if "GPHL_XDS_PATH" in paths:
-            properties["co.gphl.wf.xds.bin"] = os.path.join(paths["GPHL_XDS_PATH"], "xds_par")
+            properties["co.gphl.wf.xds.bin"] = os.path.join(
+                paths["GPHL_XDS_PATH"], "xds_par"
+            )
 
         self.update_state(self.STATES.OFF)
 
@@ -178,7 +181,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
     def open_connection(self):
 
         if self._gateway is not None:
-            logging.getLogger("HWR").debug("GPhL connection is already open")
+            logging.getLogger("HWR").debug("GΦL connection is already open")
             return
 
         params = self.connection_parameters
@@ -200,7 +203,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             java_parameters["port"] = val
 
         logging.getLogger("HWR").debug(
-            "Opening GPhL connection: %s ",
+            "Opening GΦL connection: %s ",
             (", ".join("%s:%s" % tt0 for tt0 in sorted(params.items()))),
         )
 
@@ -230,7 +233,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             HWR.beamline.session.get_base_process_directory(), self.gphl_subdir
         )
 
-        params = workflow_model_obj.get_workflow_parameters()
+        strategy_settings = workflow_model_obj.strategy_settings
         wf_settings = HWR.beamline.gphl_workflow.settings
 
         ssh_options = self.ssh_options
@@ -262,10 +265,12 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         init_spot_dir = workflow_model_obj.init_spot_dir
         if init_spot_dir:
-            command_list.extend(conversion.java_property("co.gphl.wf.initSpotDir", init_spot_dir))
+            command_list.extend(
+                conversion.java_property("co.gphl.wf.initSpotDir", init_spot_dir)
+            )
 
         # We must get hold of the options here, as we need wdir for a property
-        workflow_options = dict(params.get("options", {}))
+        workflow_options = dict(strategy_settings.get("options", {}))
         calibration_name = workflow_options.get("calibration")
         if calibration_name:
             # Expand calibration base name - to simplify identification.
@@ -273,15 +278,16 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                 calibration_name,
                 workflow_model_obj.get_name(),
             )
-        elif not workflow_options.get("strategy"):
-            strategy = workflow_model_obj.characterisation_strategy
-            if strategy:
-                workflow_options["strategy"] = strategy
+        if workflow_model_obj.wftype in ("acquisition", "diffractcal"):
+            workflow_options["strategy"] = workflow_model_obj.initial_strategy
+
         path_template = workflow_model_obj.get_path_template()
         if "prefix" in workflow_options:
             workflow_options["prefix"] = path_template.base_prefix
-        if params["strategy_type"] != "transcal":
-            workflow_options["appdir"] = HWR.beamline.session.get_base_process_directory()
+        if strategy_settings["wftype"] != "transcal":
+            workflow_options[
+                "appdir"
+            ] = HWR.beamline.session.get_base_process_directory()
         workflow_options["wdir"] = self.software_paths["GPHL_WDIR"]
         workflow_options["persistname"] = self.gphl_persistname
 
@@ -305,7 +311,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         )
         command_list.extend(ll0)
 
-        command_list.append(params["application"])
+        command_list.append(strategy_settings["application"])
 
         for keyword, value in wf_settings.get("workflow_properties", {}).items():
             command_list.extend(
@@ -326,18 +332,18 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         if not os.path.isdir(wdir):
             try:
                 os.makedirs(wdir)
-            except Exception:
+            except:
                 # No need to raise error - program will fail downstream
                 logging.getLogger("HWR").error(
-                    "Could not create GPhL working directory: %s", wdir
+                    "Could not create GΦL working directory: %s", wdir
                 )
 
         for ss0 in command_list:
-            ss0 = ss0.split("=")[-1]
+            ss0 = ss0.rsplit('=', maxsplit=1)[-1]
             if ss0.startswith("/") and "*" not in ss0 and not os.path.exists(ss0):
-                logging.getLogger("HWR").warning("File does not exist : %s" % ss0)
+                logging.getLogger("HWR").warning("File does not exist : %s", ss0)
 
-        logging.getLogger("HWR").info("GPhL execute :\n%s", " ".join(command_list))
+        logging.getLogger("HWR").info("GΦL execute :\n%s", " ".join(command_list))
 
         # Get environmental variables
         envs = os.environ.copy()
@@ -363,7 +369,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             envs["GPHL_MINICONDA_PATH"] = GPHL_MINICONDA_PATH
 
         logging.getLogger("HWR").debug(
-            "Executing GPhL workflow, in environment %s", envs
+            "Executing GΦL workflow, in environment %s", envs
         )
         try:
             self._running_process = subprocess.Popen(command_list, env=envs)
@@ -376,7 +382,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         self.update_state(self.STATES.READY)
 
         logging.getLogger("HWR").debug(
-            "GPhL workflow pid, returncode : %s, %s"
+            "GΦL workflow pid, returncode : %s, %s"
             % (self._running_process.pid, self._running_process.returncode)
         )
 
@@ -385,7 +391,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             # No workflow to abort
             return
 
-        logging.getLogger("HWR").debug("GPhL workflow ended")
+        logging.getLogger("HWR").debug("GΦL workflow ended")
         self.update_state(self.STATES.OFF)
         if self._await_result is not None:
             # We are awaiting an answer - give an abort
@@ -399,8 +405,6 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         self.workflow_queue = None
         self._await_result = None
 
-        # xx0 = self._running_process
-        # self._running_process = None
         xx0 = self.collect_emulator_process
         if xx0 is not None:
             self.collect_emulator_process = "ABORTED"
@@ -413,7 +417,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                         time.sleep(9)
                         if xx0.poll() is None:
                             xx0.kill()
-            except Exception:
+            except:
                 logging.getLogger("HWR").info(
                     "Exception while terminating external workflow process %s", xx0
                 )
@@ -421,7 +425,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
     def close_connection(self):
 
-        logging.getLogger("HWR").debug("GPhL Close connection ")
+        logging.getLogger("HWR").debug("GΦL Close connection ")
         xx0 = self._gateway
         self._gateway = None
         if xx0 is not None:
@@ -468,13 +472,13 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         if not payload:
             logging.getLogger("HWR").warning(
-                "GPhL Empty or unparsable information message. Ignored"
+                "GΦL Empty or unparsable information message. Ignored"
             )
 
         else:
             if not enactment_id:
                 logging.getLogger("HWR").warning(
-                    "GPhL information message lacks enactment ID:"
+                    "GΦL information message lacks enactment ID:"
                 )
             elif self._enactment_id != enactment_id:
                 logging.getLogger("HWR").warning(
@@ -486,10 +490,6 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                 self.workflow_queue.put_nowait(
                     (message_type, payload, correlation_id, None)
                 )
-
-        # logging.getLogger("HWR").debug("Text info message - return None")
-        #
-        return None
 
     def processMessage(self, py4j_message):
         """Receive and process message from workflow server
@@ -507,7 +507,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         if not enactment_id:
             logging.getLogger("HWR").error(
-                "GPhL message lacks enactment ID - sending 'Abort' to external workflow"
+                "GΦL message lacks enactment ID - sending 'Abort' to external workflow"
             )
             return self._response_to_server(
                 GphlMessages.BeamlineAbort(), correlation_id
@@ -530,7 +530,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         elif not payload:
             logging.getLogger("HWR").error(
-                "GPhL message lacks payload - sending 'Abort' to external workflow"
+                "GΦL message lacks payload - sending 'Abort' to external workflow"
             )
             return self._response_to_server(
                 GphlMessages.BeamlineAbort(), correlation_id
@@ -587,7 +587,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                     self.workflow_ended()
                 else:
                     logging.getLogger("HWR").debug(
-                        "GPhL - response=%s jobId=%s messageId=%s"
+                        "GΦL - response=%s jobId=%s messageId=%s"
                         % (result.__class__.__name__, enactment_id, correlation_id)
                     )
                 return self._response_to_server(result, correlation_id)
@@ -604,7 +604,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
         else:
             logging.getLogger("HWR").error(
-                "GPhL Unknown message type: %s - aborting", message_type
+                "GΦL Unknown message type: %s - aborting", message_type
             )
             return self._response_to_server(
                 GphlMessages.BeamlineAbort(), correlation_id
@@ -625,7 +625,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         correlation_id = xx0 and xx0.toString()
         if message_type != "String":
             logging.getLogger("HWR").debug(
-                "GPhL incoming: message=%s, jobId=%s,  messageId=%s"
+                "GΦL incoming: message=%s, jobId=%s,  messageId=%s"
                 % (message_type, enactment_id, correlation_id)
             )
 
@@ -642,7 +642,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                 converter = getattr(self, converterName)
             except AttributeError:
                 logging.getLogger("HWR").error(
-                    "GPhL Message type %s not recognised (no %s function)"
+                    "GΦL Message type %s not recognised (no %s function)"
                     % (message_type, converterName)
                 )
                 payload = None
@@ -652,7 +652,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
                     payload = converter(py4j_message.getPayload())
                 except NotImplementedError:
                     logging.getLogger("HWR").error(
-                        "Processing of GPhL message %s not implemented", message_type
+                        "Processing of GΦL message %s not implemented", message_type
                     )
                     payload = None
         #
@@ -704,18 +704,99 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         return GphlMessages.SubprocessStopped()
 
     def _ChooseLattice_to_python(self, py4jChooseLattice):
-        lattice_format = py4jChooseLattice.getFormat().toString()
-        solutions = py4jChooseLattice.getSolutions()
-        lattices = py4jChooseLattice.getLattices()
-        crystalSystem = py4jChooseLattice.getCrystalSystem()
-        if crystalSystem is not None:
-            crystalSystem = crystalSystem.getXdsChar()
+        """ 20230515
+        Temporarily input java class has attributes:
+        solutions (str) # solutions table as a text block
+        format (str), lattices (set(str)), and crystalSystem (CrystalSystem)
+        """
+        lattices = tuple(py4jChooseLattice.getLattices())
+        java_crystal_system = py4jChooseLattice.getCrystalSystem()
+        if lattices:
+            crystalClasses = crystal_symmetry.crystal_classes_from_params(
+                lattices=lattices
+            )
+        elif java_crystal_system:
+            crystalClasses = crystal_symmetry.crystal_classes_from_params(
+                lattices= (java_crystal_system.name().capitalize(),),
+            )
+        else:
+            crystalClasses = None
+
+        # NBNB TBD For now this does  NOT make sense.
+        # The actual ctrystal classes are kept on the BCS side, and
+        # chat is calculated here is missign infornmation.
+        crystalClasses = None
+        indexingFormat = py4jChooseLattice.getFormat().toString()
         return GphlMessages.ChooseLattice(
-            lattice_format=lattice_format,
-            solutions=solutions,
-            lattices=lattices,
-            crystalSystem=crystalSystem,
+            indexingSolutions=self.parse_indexing_solution_text(
+                indexingFormat,
+                py4jChooseLattice.getSolutions(),
+            ),
+            indexingFormat=indexingFormat,
+            crystalClasses=crystalClasses,
         )
+
+    def parse_indexing_solution_text(self, solution_format, text):
+        """CONvert indexing solutions as a block fo text to a list of IndexingSolution
+
+        Args:
+            solution_format (str)
+            text (str):
+
+        Returns: list(GphlMessages.indexingSolution)
+
+        """
+        # find headers lines
+        solutions = []
+        if solution_format == "IDXREF":
+            lines = text.splitlines()
+            for indx, line in enumerate(lines):
+                if "BRAVAIS-" in line:
+                    # Used as marker for first header line
+                    header = ["%s\n%s" % (line, lines[indx + 1])]
+                    break
+            else:
+                raise ValueError("Substring 'BRAVAIS-' missing in %s indexing solution")
+
+            for line in lines[indx:]:
+                ss0 = line.strip()
+                if ss0:
+                    # we are skipping blank line at the start
+                    if solutions or ss0[0] == "*":
+                        # First real line will start with a '*
+                        # Subsequent non-empty lines will also be used
+                        fields = ss0.split()
+                        if fields[0] == "*":
+                            del fields[0]
+                            isConsistent = True
+                        else:
+                            isConsistent = False
+                        latticeCharacter = int(fields[0])
+                        bravaisLattice = fields[1]
+                        qualityOfFit = float(fields[2])
+                        cell = GphlMessages.UnitCell(*(float(x) for x in fields[3:]))
+                        solutions.append(
+                            GphlMessages.IndexingSolution(
+                                isConsistent=isConsistent,
+                                latticeCharacter=latticeCharacter,
+                                bravaisLattice=bravaisLattice,
+                                qualityOfFit=qualityOfFit,
+                                cell=cell,
+                            )
+                        )
+
+
+                elif solutions:
+                    # we have finished - empty non-initial line
+                    break
+
+            #
+            return solutions
+        else:
+            raise ValueError(
+                "GPhL: Indexing format %s is not known" % repr(solution_format)
+            )
+
 
     def _CollectionProposal_to_python(self, py4jCollectionProposal):
         uuidString = py4jCollectionProposal.getId().toString()
@@ -829,6 +910,21 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             py4jGoniostatSweepSetting, isSweepSetting=True
         )
 
+    def _UnitCell_to_python(self, py4jUnitCell):
+
+        cell_params = tuple(py4jUnitCell.getLengths()) + tuple(py4jUnitCell.getAngles())
+        return GphlMessages.UnitCell(*cell_params)
+
+    def _IndexingSolution_to_python(self, py4jIndexingSolution):
+
+        return GphlMessages.IndexingSolution(
+            bravaisLattice=py4jIndexingSolution.getBravaisLattice(),
+            cell=self._UnitCell_to_python(py4jIndexingSolution.getCell()),
+            isConsistent=py4jIndexingSolution.isConsistent(),
+            latticeCharacter=py4jIndexingSolution.getLatticeCharacter(),
+            qualityOfFit=py4jIndexingSolution.getQualityOfFit(),
+        )
+
     def _Sweep_to_python(self, py4jSweep):
 
         # NB scans are not set - where scans are present in a message,
@@ -890,111 +986,31 @@ class GphlWorkflowConnection(HardwareObjectYaml):
         if payloadType == "ConfigurationData":
             return self._ConfigurationData_to_java(payload)
 
-        elif payloadType == "BeamlineAbort":
+        if payloadType == "BeamlineAbort":
             return self._BeamlineAbort_to_java(payload)
 
-        elif payloadType == "ReadyForCentring":
+        if payloadType == "ReadyForCentring":
             return self._ReadyForCentring_to_java(payload)
 
-        elif payloadType == "SampleCentred":
+        if payloadType == "SampleCentred":
             return self._SampleCentred_to_java(payload)
 
-        elif payloadType == "CollectionDone":
+        if payloadType == "CollectionDone":
             # self.test_lattice_selection()
             return self._CollectionDone_to_java(payload)
 
-        elif payloadType == "SelectedLattice":
+        if payloadType == "SelectedLattice":
             return self._SelectedLattice_to_java(payload)
 
-        elif payloadType == "CentringDone":
+        if payloadType == "CentringDone":
             return self._CentringDone_to_java(payload)
 
-        elif payloadType == "PriorInformation":
+        if payloadType == "PriorInformation":
             return self._PriorInformation_to_java(payload)
 
-        else:
-            raise ValueError(
-                "Payload %s not supported for conversion to java" % payloadType
-            )
-
-    def test_lattice_selection(self):
-        """Dummy test of lattice selection UI"""
-
-        # |NB @~@~for test only
-        test_payload = GphlMessages.ChooseLattice(
-            lattice_format="IDXREF",
-            crystalSystem="m",
-            lattices=["tP", "aP"],
-            solutions="""
-*********** DETERMINATION OF LATTICE CHARACTER AND BRAVAIS LATTICE ***********
-
- The CHARACTER OF A LATTICE is defined by the metrical parameters of its
- reduced cell as described in the INTERNATIONAL TABLES FOR CRYSTALLOGRAPHY
- Volume A, p. 746 (KLUWER ACADEMIC PUBLISHERS, DORDRECHT/BOSTON/LONDON, 1989).
- Note that more than one lattice character may have the same BRAVAIS LATTICE.
-
- A lattice character is marked "*" to indicate a lattice consistent with the
- observed locations of the diffraction spots. These marked lattices must have
- low values for the QUALITY OF FIT and their implicated UNIT CELL CONSTANTS
- should not violate the ideal values by more than
- MAXIMUM_ALLOWED_CELL_AXIS_RELATIVE_ERROR=  0.03
- MAXIMUM_ALLOWED_CELL_ANGLE_ERROR=           1.5 (Degrees)
-
-  LATTICE-  BRAVAIS-   QUALITY  UNIT CELL CONSTANTS (ANGSTROEM & DEGREES)
- CHARACTER  LATTICE     OF FIT      a      b      c   alpha  beta gamma
-
- *  44        aP          0.0      56.3   56.3  102.3  90.0  90.0  90.0
- *  31        aP          0.0      56.3   56.3  102.3  90.0  90.0  90.0
- *  33        mP          0.0      56.3   56.3  102.3  90.0  90.0  90.0
- *  35        mP          0.0      56.3   56.3  102.3  90.0  90.0  90.0
- *  34        mP          0.0      56.3  102.3   56.3  90.0  90.0  90.0
- *  32        oP          0.0      56.3   56.3  102.3  90.0  90.0  90.0
- *  14        mC          0.1      79.6   79.6  102.3  90.0  90.0  90.0
- *  10        mC          0.1      79.6   79.6  102.3  90.0  90.0  90.0
- *  13        oC          0.1      79.6   79.6  102.3  90.0  90.0  90.0
- *  11        tP          0.1      56.3   56.3  102.3  90.0  90.0  90.0
-    37        mC        250.0     212.2   56.3   56.3  90.0  90.0  74.6
-    36        oC        250.0      56.3  212.2   56.3  90.0  90.0 105.4
-    28        mC        250.0      56.3  212.2   56.3  90.0  90.0  74.6
-    29        mC        250.0      56.3  125.8  102.3  90.0  90.0  63.4
-    41        mC        250.0     212.3   56.3   56.3  90.0  90.0  74.6
-    40        oC        250.0      56.3  212.2   56.3  90.0  90.0 105.4
-    39        mC        250.0     125.8   56.3  102.3  90.0  90.0  63.4
-    30        mC        250.0      56.3  212.2   56.3  90.0  90.0  74.6
-    38        oC        250.0      56.3  125.8  102.3  90.0  90.0 116.6
-    12        hP        250.1      56.3   56.3  102.3  90.0  90.0  90.0
-    27        mC        500.0     125.8   56.3  116.8  90.0 115.5  63.4
-    42        oI        500.0      56.3   56.3  219.6 104.8 104.8  90.0
-    15        tI        500.0      56.3   56.3  219.6  75.2  75.2  90.0
-    26        oF        625.0      56.3  125.8  212.2  83.2 105.4 116.6
-     9        hR        750.0      56.3   79.6  317.1  90.0 100.2 135.0
-     1        cF        999.0     129.6  129.6  129.6 128.6  75.7 128.6
-     2        hR        999.0      79.6  116.8  129.6 118.9  90.0 109.9
-     3        cP        999.0      56.3   56.3  102.3  90.0  90.0  90.0
-     5        cI        999.0     116.8   79.6  116.8  70.1  39.8  70.1
-     4        hR        999.0      79.6  116.8  129.6 118.9  90.0 109.9
-     6        tI        999.0     116.8  116.8   79.6  70.1  70.1  39.8
-     7        tI        999.0     116.8   79.6  116.8  70.1  39.8  70.1
-     8        oI        999.0      79.6  116.8  116.8  39.8  70.1  70.1
-    16        oF        999.0      79.6   79.6  219.6  90.0 111.2  90.0
-    17        mC        999.0      79.6   79.6  116.8  70.1 109.9  90.0
-    18        tI        999.0     116.8  129.6   56.3  64.3  90.0 118.9
-    19        oI        999.0      56.3  116.8  129.6  61.1  64.3  90.0
-    20        mC        999.0     116.8  116.8   56.3  90.0  90.0 122.4
-    21        tP        999.0      56.3  102.3   56.3  90.0  90.0  90.0
-    22        hP        999.0      56.3  102.3   56.3  90.0  90.0  90.0
-    23        oC        999.0     116.8  116.8   56.3  90.0  90.0  57.6
-    24        hR        999.0     162.2  116.8   56.3  90.0  69.7  77.4
-    25        mC        999.0     116.8  116.8   56.3  90.0  90.0  57.6
-    43        mI        999.0      79.6  219.6   56.3 104.8 135.0  68.8
-
- For protein crystals the possible space group numbers corresponding  to""",
+        raise ValueError(
+            "Payload %s not supported for conversion to java" % payloadType
         )
-        if self.workflow_queue is not None:
-            # Could happen if we have ended the workflow
-            self.workflow_queue.put_nowait(
-                ("ChooseLattice", test_payload, "9999999", None)
-            )
 
     def _response_to_server(self, payload, correlation_id):
         """Create py4j message from py4j wrapper and current ids"""
@@ -1015,11 +1031,12 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             response = self._gateway.jvm.co.gphl.sdcp.py4j.Py4jMessage(
                 py4j_payload, enactment_id, correlation_id
             )
-        except Exception:
+        except:
             self.abort_workflow(
                 message="Error sending reply (%s) to server"
                 % py4j_payload.getClass().getSimpleName()
             )
+            return None
         else:
             return response
 
@@ -1078,6 +1095,7 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             list(sampleCentred.interleaveOrder),
             list(self._PhasingWavelength_to_java(x) for x in sampleCentred.wavelengths),
             self._BcsDetectorSetting_to_java(sampleCentred.detectorSetting),
+            sampleCentred.repetition_count,
         )
 
         beamstopSetting = sampleCentred.beamstopSetting
@@ -1103,15 +1121,45 @@ class GphlWorkflowConnection(HardwareObjectYaml):
 
     def _SelectedLattice_to_java(self, selectedLattice):
         jvm = self._gateway.jvm
-        frmt = jvm.co.gphl.beamline.v2_unstable.domain_types.IndexingFormat.valueOf(
-            selectedLattice.lattice_format
+        userPointGroup = selectedLattice.userPointGroup
+        if userPointGroup:
+            userPointGroup = (
+                jvm.co.gphl.beamline.v2_unstable.domain_types.PointGroup.valueOf(
+                    "PG%s" % selectedLattice.userPointGroup
+                )
+            )
+        # solution = self._IndexingSolution_to_java(selectedLattice.indexingSolution)
+        solution = list(
+            str(
+                getattr(selectedLattice.indexingSolution, tag))
+                for tag in ("latticeCharacter", "bravaisLattice", "qualityOfFit")
+        ) + list(
+            str(getattr(selectedLattice.indexingSolution.cell, tag) )
+            for tag in ("a", "b", "c", "alpha", "beta", "gamma")
         )
         result = jvm.astra.messagebus.messages.information.SelectedLatticeImpl(
-            frmt,
-            selectedLattice.solution,
+            jvm.co.gphl.beamline.v2_unstable.domain_types.IndexingFormat.valueOf(
+                selectedLattice.indexingFormat
+            ),
+            solution,
             self._BcsDetectorSetting_to_java(selectedLattice.strategyDetectorSetting),
             self._PhasingWavelength_to_java(selectedLattice.strategyWavelength),
+            # userPointGroup,
             selectedLattice.strategyControl,
+        )
+        #
+        return result
+
+    def _IndexingSolution_to_java(self, indexingSolution):
+        jvm = self._gateway.jvm
+        cell = indexingSolution.cell
+        cell = cell and self._UnitCell_to_java(cell)
+        result = jvm.astra.messagebus.messages.information.IndexingSolutionImpl(
+            indexingSolution.bravaisLattice,
+            indexingSolution.latticeCharacter,
+            indexingSolution.isConsistent,
+            indexingSolution.qualityOfFit,
+            cell,
         )
         #
         return result
@@ -1244,12 +1292,16 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             else:
                 javaNewRotation = self._GoniostatRotation_to_java(newRotation)
 
-            return jvm.astra.messagebus.messages.instrumentation.GoniostatTranslationImpl(
-                axisSettings, javaUuid, javaRotationId, javaNewRotation
+            return (
+                jvm.astra.messagebus.messages.instrumentation.GoniostatTranslationImpl(
+                    axisSettings, javaUuid, javaRotationId, javaNewRotation
+                )
             )
         else:
-            return jvm.astra.messagebus.messages.instrumentation.GoniostatTranslationImpl(
-                axisSettings, javaUuid, javaRotationId
+            return (
+                jvm.astra.messagebus.messages.instrumentation.GoniostatTranslationImpl(
+                    axisSettings, javaUuid, javaRotationId
+                )
             )
 
     def _GoniostatRotation_to_java(self, goniostatRotation):
@@ -1297,5 +1349,5 @@ class GphlWorkflowConnection(HardwareObjectYaml):
             axisSettings, javaUuid
         )
 
-    class Java(object):
+    class Java():
         implements = ["co.gphl.py4j.PythonListener"]

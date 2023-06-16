@@ -773,14 +773,7 @@ class Beamline(ConfiguredObject):
             )
             acq_parameters.transmission = 0.0
 
-        try:
-            acq_parameters.shutterless = self.detector.has_shutterless()
-        except Exception:
-            logging.getLogger("HWR").warning(
-                "get_default_acquisition_parameters: "
-                "Could not get has_shutterless, setting to False"
-            )
-            acq_parameters.shutterless = False
+        acq_parameters.shutterless = params.get("shutterless", True)
 
         try:
             acq_parameters.detector_binning_mode = self.detector.get_binning_mode()
