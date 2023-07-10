@@ -655,6 +655,7 @@ class BIOMAXMD3(GenericDiffractometer):
         """
         Descript. :
         """
+        self.update_zoom_calibration()
         self.centring_hwobj.initCentringProcedure()
         self.centring_hwobj.appendCentringDataPoint(
             {
@@ -666,6 +667,7 @@ class BIOMAXMD3(GenericDiffractometer):
         pos = self.centring_hwobj.centeredPosition()
         if return_by_names:
             pos = self.convert_from_obj_to_name(pos)
+        pos.pop('zoom', None)
         return pos
 
     def abort(self):
