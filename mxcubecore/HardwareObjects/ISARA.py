@@ -387,6 +387,10 @@ class ISARA(SampleChanger):
         self._chnPuckLoadedSample.connect_signal("update", self.cats_loaded_lid_changed)
         self._chnNumLoadedSample.connect_signal("update", self.cats_loaded_num_changed)
 
+        # load the initial values of attributes and calculate initial state of the sample changer
+        self._do_update_state()
+        self._update_state()
+
         # connect presence channels
         if self.basket_channels is not None:  # old device server
             for basket_index in range(self.number_of_baskets):
