@@ -1,6 +1,7 @@
 from mxcubecore.BaseHardwareObjects import HardwareObject
 from mxcubecore.HardwareObjects.abstract.sample_changer.Container import Container
 from mxcubecore.HardwareObjects.abstract.sample_changer.Sample import Sample
+from mxcubecore.HardwareObjects.abstract.AbstractSampleChanger import SampleChangerState
 
 
 NUM_PUCKS = 29  # number of pucks in the dewar
@@ -57,13 +58,49 @@ class Meep(Container, HardwareObject):
         Container.__init__(self, "ISARA", None, "Sample Changer", False)
         HardwareObject.__init__(self, name)
 
+        self._init_pucks()
+        self._state = SampleChangerState.Unknown
+
+    def init(self):
+        self._poll_attribute("CassettePresence", self._pucks_presence_updated)
+        self._poll_attribute("Powered", self._powered_updated)
+
+    def _init_pucks(self):
         for pos in range(1, NUM_PUCKS + 1):
             puck = _Unipuck(self, pos)
             self._add_component(puck)
 
-        for n in [0, 2, 11, 15]:
-            puck = self.components[n]
-            puck.set_present(True)
+    def _poll_attribute(self, attr_name: str, callback):
+        channel = self.add_channel(
+            {
+                "type": "tango",
+                "name": f"_chn{attr_name}",
+                "tangoname": self.tangoname,
+                "polling": 1000,
+            },
+            attr_name,
+        )
+
+        channel.connect_signal("update", callback)
+
+    def _pucks_presence_updated(self, pucks_presence):
+        for puck_idx, present in enumerate(pucks_presence):
+            self.components[puck_idx].set_present(present)
+
+    def _powered_updated(self, is_powered: bool):
+        self._state = (
+            SampleChangerState.Ready if is_powered else SampleChangerState.Disabled
+        )
+
+        self._emit_state_changed_event()
+
+    def _emit_state_changed_event(self):
+        self.emit("stateChanged", (self._state, None))
 
     def get_loaded_sample(self):
         return None
+
+    def get_status(self):
+        status = SampleChangerState.tostring(self._state)
+
+        return status
