@@ -980,7 +980,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
             else:
                 try:
                     if self.dtox_hwobj is not None:
-                        self.dtox_hwobj._set_value(value)
+                        self.dtox_hwobj.set_value(value)
                         self.dtox_hwobj.wait_end_of_move(50)
                 except Exception:
                     self.user_log.error('Cannot move detector.')

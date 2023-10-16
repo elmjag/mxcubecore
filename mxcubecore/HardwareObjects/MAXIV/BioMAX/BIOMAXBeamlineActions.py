@@ -79,7 +79,7 @@ class BIOMAXBeamlineActions(HardwareObject):
 
         if self.dtox_hwobj is not None:
             logging.getLogger("HWR").info("Moving detector to safe area...")
-            self.dtox_hwobj.sync_move(900, timeout = 50)
+            self.dtox_hwobj.set_value(900, timeout = 50)
 
         if self.sample_changer_hwobj.isPowered():
             if unmount_sample and self.sample_changer_hwobj.getLoadedSample() is not None:
@@ -132,7 +132,7 @@ class BIOMAXBeamlineActions(HardwareObject):
 
         if self.dtox_hwobj is not None:
             logging.getLogger("HWR").info("Moving detector to safe area...")
-            self.dtox_hwobj.sync_move(800, timeout = 50)
+            self.dtox_hwobj.set_value(800, timeout = 50)
 
     def _end_beamtime(self):
         try:
@@ -286,7 +286,7 @@ class BIOMAXBeamlineActions(HardwareObject):
 
         if self.dtox_hwobj is not None:
             logging.getLogger("HWR").info("Moving detector to safe area...")
-            self.dtox_hwobj.sync_move(900, timeout = 50)
+            self.dtox_hwobj.set_value(900, timeout = 50)
 
     def _check_laser_shutter(self):
         if self.laser_shutter_hwobj is None:
