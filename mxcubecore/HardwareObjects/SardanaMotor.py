@@ -233,6 +233,14 @@ class SardanaMotor(AbstractMotor):
         """
         self.stop_command()
 
+    def is_moving(self):
+        """
+        Descript. : True if the motor is currently moving
+        """
+        return self.get_state() == HardwareObjectState.BUSY
+
+    motorIsMoving = is_moving
+
     def get_velocity(self):
         try:
             return self.velocity_channel.get_value()
