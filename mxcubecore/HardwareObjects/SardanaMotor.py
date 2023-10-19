@@ -254,7 +254,7 @@ class SardanaMotor(AbstractMotor, HardwareObject):
         """
         Descript. : True if the motor is currently moving
         """
-        return self.is_ready() and self.get_state() == HardwareObjectState.BUSY
+        return self.get_state() == HardwareObjectState.BUSY
 
     motorIsMoving = is_moving
 
@@ -263,6 +263,8 @@ class SardanaMotor(AbstractMotor, HardwareObject):
         Descript. : waits till the motor stops
         """
         with Timeout(timeout):
+            # Wait a bit to ensure the motor started moving
+            # 0.1 empirically obtained
             time.sleep(0.1)
             while self.is_moving():
                 time.sleep(0.1)
