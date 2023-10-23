@@ -134,6 +134,7 @@ from gevent import (
 
 from mxcubecore.BaseHardwareObjects import HardwareObject
 from mxcubecore.HardwareObjects.abstract.sample_changer.Container import Container
+from mxcubecore.HardwareObjects.abstract.sample_changer.Sample import Sample
 from mxcubecore.TaskUtils import task as dtask
 
 
