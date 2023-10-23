@@ -24,6 +24,7 @@ from __future__ import print_function
 import logging
 import time
 
+import gevent
 import PyTango
 
 from mxcubecore.HardwareObjects.abstract.AbstractSampleChanger import (
@@ -31,10 +32,6 @@ from mxcubecore.HardwareObjects.abstract.AbstractSampleChanger import (
     Sample,
     SampleChanger,
     SampleChangerState,
-    argin,
-    gevent,
-    has_been_loaded,
-    new_loaded,
 )
 
 __author__ = "Michael Hellmig, Jie Nan, Bixente Rey"
@@ -184,6 +181,7 @@ class Cats90(SampleChanger):
 
         # Default values
         self.cats_powered = False
+        self.cats_pathsafe = True
         self.cats_status = ""
         self.cats_running = False
         self.cats_state = PyTango.DevState.UNKNOWN
@@ -597,7 +595,7 @@ class Cats90(SampleChanger):
                 Pin.get_sample_address(spl[1], spl[2])
             )
             datamatrix = None
-            present = scanned = loaded = _has_been_loaded = False
+            present = scanned = loaded = has_been_loaded = False
             sample._set_info(present, datamatrix, scanned)
             sample._set_loaded(loaded, has_been_loaded)
             sample._set_holder_length(spl[4])
@@ -1495,7 +1493,7 @@ class Cats90(SampleChanger):
                     sample._set_info(present, datamatrix, scanned)
 
                     # forget about any loaded state in newly mounted or removed basket)
-                    loaded = _has_been_loaded = False
+                    loaded = has_been_loaded = False
                     sample._set_loaded(loaded, has_been_loaded)
 
         self._trigger_contents_updated_event()
