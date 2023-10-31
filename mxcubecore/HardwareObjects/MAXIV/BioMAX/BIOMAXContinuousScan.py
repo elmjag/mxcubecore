@@ -992,3 +992,13 @@ class BIOMAXContinuousScan(AbstractEnergyScan, HardwareObject):
         ):
             while self.safety_shutter_hwobj.get_state() == "closed":
                 gevent.sleep(0.2)
+
+    def get_elements(self):
+        elements = []
+        try:
+            for el in self["elements"]:
+                elements.append({"symbol": el.symbol, "energy": el.energy})
+        except IndexError:
+            pass
+        return elements
+
