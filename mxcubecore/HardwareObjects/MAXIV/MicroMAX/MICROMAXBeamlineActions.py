@@ -39,8 +39,7 @@ class PrepareOpenHutch:
                 except Exception:
                     logging.getLogger("HWR").warning("Could not move detector to safe position")
         except Exception as ex:
-            logging.getLogger("HWR").exception("Could not PrepareOpenHutch")
-            print(ex)
+            logging.getLogger("HWR").exception("Could not PrepareOpenHutch. Error was {}".format(ex))
 
 
 class CloseDetectorCover:
@@ -53,9 +52,8 @@ class CloseDetectorCover:
             plc = tango.DeviceProxy('b312a/vac/plc-01')
             plc.B312A_E06_DIA_DETC01_ENAC = 1
             plc.B312A_E06_DIA_DETC01_CLC = 1
-        except Exception:
-            logging.getLogger("HWR").exception("Could not close the detector cover")
-            pass
+        except Exception as ex:
+            logging.getLogger("HWR").exception("Could not close the detector cover. Error was {}".format(ex))
 
 
 class OpenDetectorCover:
@@ -68,9 +66,8 @@ class OpenDetectorCover:
             plc = tango.DeviceProxy('b312a/vac/plc-01')
             plc.B312A_E06_DIA_DETC01_ENAC = 1
             plc.B312A_E06_DIA_DETC01_OPC = 1
-        except Exception:
-            logging.getLogger("HWR").exception("Could not close the detector cover")
-            pass
+        except Exception as ex:
+            logging.getLogger("HWR").exception("Could not close the detector cover. Error was {}".format(ex))
 
 
 class BeamtimeEnd:
@@ -83,17 +80,17 @@ class BeamtimeEnd:
             prepare_open_hutch()
             cmd = self.getCommandObject('beamtime_end')
             cmd(wait=True)
-        except Exception:
-            logging.getLogger("HWR").error("Cannot end beamtime.")
+        except Exception as ex:
+            logging.getLogger("HWR").exception("Cannot end beamtime. Error was {}".format(ex))
 
 
 class BeamtimeStart:
     def __call__(self, *args, **kw):
         """
-        TBD
+        TBD: sardana macro not yet available in MicroMAX
         """
         try:
             cmd = self.getCommandObject('beamtime_start')
             cmd(wait=True)
-        except Exception:
-            logging.getLogger("HWR").error("Cannot start beamtime.")
+        except Exception as ex:
+            logging.getLogger("HWR").error("Cannot start beamtime. Error was {}".format(ex))
