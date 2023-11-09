@@ -19,6 +19,8 @@ from mxcubecore.BaseHardwareObjects import HardwareObject
 from abstract.AbstractCollect import AbstractCollect
 from mxcubecore.HardwareObjects.GenericDiffractometer import GenericDiffractometer
 
+DET_SAFE_POSITION = 500
+
 
 class MICROMAXCollect(AbstractCollect, HardwareObject):
     """
@@ -1185,7 +1187,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
             self.diffractometer_hwobj.set_phase("Transfer")
             if self.safety_shutter_hwobj is not None and self.safety_shutter_hwobj.getShutterState() == 'opened':
                 self.close_safety_shutter()
-        self.move_detector(800)
+        self.move_detector(DET_SAFE_POSITION)
 
     def _update_image_to_display(self):
         fname1 = "/mxn/groups/sw/mxsw/albula_autoload/to_display"
