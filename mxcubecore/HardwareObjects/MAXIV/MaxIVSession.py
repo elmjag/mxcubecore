@@ -19,7 +19,8 @@ from mxcubecore.model import queue_model_objects
 # proposal types from DUO
 PROPOSAL_TYPES = {'H': 'in-house',
                   'N': 'normal',
-                  'T': 'Training and Education"',
+                  'T': 'Training and Education',
+                  't': 'Training and Education',
                   'P': 'proprietary',
                   'B': 'BAG proposals',
                   'L': 'long term',
