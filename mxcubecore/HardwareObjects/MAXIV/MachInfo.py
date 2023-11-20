@@ -77,7 +77,7 @@ class MachInfo(AbstractMachineInfo):
     def _update_me(self):
         self.t0 = time.time()
         while True:
-            gevent.sleep(10)
+            gevent.sleep(30)
             _machine_message = cleanhtml(self.mach_info_channel.MachineMessage)
             _machine_message = _machine_message.replace('R1', '\nR1')
             _machine_message = _machine_message.replace('Linac', '\nLinac')
