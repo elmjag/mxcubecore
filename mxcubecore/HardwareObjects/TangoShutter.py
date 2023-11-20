@@ -111,53 +111,42 @@ In the example the tango attribute is called "exper_shutter"
 </device>
 
 """
-
-from mxcubecore import HardwareRepository as HWR
-from mxcubecore import BaseHardwareObjects
-
+from enum import Enum, unique
+from mxcubecore.HardwareObjects.abstract.AbstractShutter import AbstractShutter
+from mxcubecore.BaseHardwareObjects import HardwareObjectState
 import logging
 
 
-class TangoShutter(BaseHardwareObjects.Device):
+@unique
+class ShutterStates(Enum):
+    """Shutter states definitions."""
 
-    shutterState = {
-        "FALSE": "closed",
-        "TRUE": "opened",
-        "0": "closed",
-        "1": "opened",
-        "4": "insert",
-        "5": "extract",
-        "6": "moving",
-        "7": "standby",
-        "8": "fault",
-        "9": "init",
-        "10": "running",
-        "11": "alarm",
-        "12": "disabled",
-        "13": "unknown",
-        "-1": "fault",
-        "NONE": "unknown",
-        "UNKNOWN": "unknown",
-        "CLOSE": "closed",
-        "OPEN": "opened",
-        "INSERT": "closed",
-        "EXTRACT": "opened",
-        "MOVING": "moving",
-        "RUNNING": "moving",
-        "_": "automatic",
-        "FAULT": "fault",
-        "DISABLE": "disabled",
-        "OFF": "fault",
-        "STANDBY": "standby",
-        "ON": "unknown",
-        "ALARM": "alarm",
-    }
+    OPEN = HardwareObjectState.READY, 6
+    CLOSE = HardwareObjectState.READY, 7
+    MOVING = HardwareObjectState.BUSY, 8
+    DISABLED = HardwareObjectState.WARNING, 9
+    AUTOMATIC = HardwareObjectState.READY, 10
+
+# <command type="tango" tangoname="b311a-o/pss/bs-01" name="Open">Open</command>
+#   <command type="tango" tangoname="b311a-o/pss/bs-01" name="Close">Close</command>
+#   <channel type="tango" name="State" tangoname="b311a-o/pss/bs-01" polling="1000">State</channel
+
+@unique
+class BaseValueEnum(Enum):
+    """Defines only the compulsory values."""
+
+    OPEN = "OPEN"
+    CLOSE = "CLOSE"
+    UNKNOWN = "UNKNOWN"
+
+class TangoShutter(AbstractShutter):
+    VALUES = BaseValueEnum
 
     def init(self):
         self.state_value_str = "unknown"
         try:
             self.shutter_channel = self.get_channel_object("State")
-            self.shutter_channel.connect_signal("update", self.shutterStateChanged)
+            self.shutter_channel.connect_signal("update", self.shutter_state_changed)
         except KeyError:
             logging.getLogger().warning(
                 "%s: cannot connect to shutter channel", self.name()
@@ -166,23 +155,45 @@ class TangoShutter(BaseHardwareObjects.Device):
         self.open_cmd = self.get_command_object("Open")
         self.close_cmd = self.get_command_object("Close")
 
-    def shutterStateChanged(self, value):
+    def shutter_state_changed(self, value):
         self.state_value_str = self._convert_state_to_str(value)
         self.emit("shutterStateChanged", (self.state_value_str,))
 
     def _convert_state_to_str(self, value):
         state = str(value).upper()
-        state_str = self.shutterState.get(state, "unknown")
+        try:
+            state_str = ShutterStates[state]
+        except KeyError:
+            state_str = "unknown"
         return state_str
 
-    def readShutterState(self):
-        state = self.shutter_channel.get_value()
-        return self._convert_state_to_str(state)
+    # def readShutterState(self):
+    #     state = self.shutter_channel.get_value(   )
+    #     return self._convert_state_to_str(state)
 
     def getShutterState(self):
         return self.state_value_str
 
-    def openShutter(self):
+    def get_value(self):
+        state = self.shutter_channel.get_value()
+        try:
+            value = self.VALUES[str(state)]
+        except KeyError:
+            value = "UNKNOWN"
+        return value
+
+    def _set_value(self, value):
+        """Implementation of specific set actuator logic.
+        Args:
+            value: target value
+        """
+        print('_set_value', value)
+        if value.value == 'OPEN':
+            self.open()
+        elif value.value == 'CLOSE':
+            self.close()  
+
+    def open(self, timeout=None):
         # Try getting open command configured in xml
         # If command is not defined then try writing the channel
         if self.open_cmd is not None:
@@ -190,23 +201,10 @@ class TangoShutter(BaseHardwareObjects.Device):
         else:
             self.shutter_channel.set_value(True)
 
-    def closeShutter(self):
+    def close(self):
         # Try getting close command configured in xml
         # If command is not defined try writing the channel
         if self.close_cmd is not None:
             self.close_cmd()
         else:
             self.shutter_channel.set_value(False)
-
-
-def test():
-    hwr = HWR.get_hardware_repository()
-    hwr.connect()
-
-    shut = hwr.get_hardware_object("/fastshutter")
-
-    print(("Shutter State is: ", shut.readShutterState()))
-
-
-if __name__ == "__main__":
-    test()
