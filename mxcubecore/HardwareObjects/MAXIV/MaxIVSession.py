@@ -109,11 +109,11 @@ class MaxIVSession(Session):
                   available
         :rtype: str
         """
-        proposal = 'local-user'
+        proposal = "local-user"
 
         if self.proposal_code and self.proposal_number:
-            if self.proposal_code == 'ifx':
-                self.proposal_code = 'fx'
+            if self.proposal_code == "ifx":
+                self.proposal_code = "fx"
 
             proposal = str(self.proposal_number)
 
