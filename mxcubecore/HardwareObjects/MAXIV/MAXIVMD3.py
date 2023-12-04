@@ -1,12 +1,19 @@
 import logging
-import math
 import time
 
 import gevent
-import lucid_core as lucid
 import numpy as np
-from gevent import monkey
 from PIL import Image
+
+try:
+    import lucid_core as lucid
+except ModuleNotFoundError:
+    logging.getLogger("HWR").warning(
+        "[MAXIVMD3] Lucid cannot be imported."
+    )
+import math
+
+from gevent import monkey
 
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.HardwareObjects.GenericDiffractometer import (
