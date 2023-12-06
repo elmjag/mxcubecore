@@ -7,6 +7,7 @@ import gevent
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.BaseHardwareObjects import HardwareObject
 from mxcubecore.HardwareObjects.abstract.AbstractDetector import AbstractDetector
+from mxcubecore.model.queue_model_objects import PathTemplate
 from mxcubecore.TaskUtils import task
 
 

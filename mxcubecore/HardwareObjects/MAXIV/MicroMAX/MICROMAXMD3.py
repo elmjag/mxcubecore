@@ -16,6 +16,10 @@ from mxcubecore.HardwareObjects.MAXIV.MAXIVMD3 import MAXIVMD3
 
 monkey.patch_all(thread=False)
 
+MONITORING_INTERVAL = 0.1
+DEFAULT_TASK_TIMEOUT = 200
+DEFAULT_TASK_RUNNING_TIMEOUT = 2
+
 
 class MICROMAXMD3(MAXIVMD3):
     def __init__(self, *args):
@@ -128,7 +132,7 @@ class MICROMAXMD3(MAXIVMD3):
 
         if wait:
             task_info = self.waitTaskResult(
-                task_id, timeout=MAXIVMD3.DEFAULT_TASK_TIMEOUT + exptime * nlines
+                task_id, timeout=DEFAULT_TASK_TIMEOUT + exptime * nlines
             )
             task_output, task_exception, task_result = task_info[4:7]
             if int(task_result) <= 0:  # either failed or aborted
@@ -138,7 +142,7 @@ class MICROMAXMD3(MAXIVMD3):
                 )
         else:
             # we only wait until task actually started
-            self.waitTaskIsRunning(task_id, timeout=MAXIVMD3.DEFAULT_TASK_RUNNING_TIMEOUT)
+            self.waitTaskIsRunning(task_id, timeout=DEFAULT_TASK_RUNNING_TIMEOUT)
             return
 
         logging.getLogger("HWR").info(
