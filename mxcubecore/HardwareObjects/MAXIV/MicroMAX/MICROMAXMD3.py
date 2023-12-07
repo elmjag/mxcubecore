@@ -25,11 +25,11 @@ class MICROMAXMD3(MAXIVMD3):
         """
         Description:
         """
-        MAXIVMD3.__init__(self, *args)
+        super().__init__(*args)
 
     def init(self):
 
-        MAXIVMD3.init(self)
+        super().init()
 
         self.image_width = None
         self.image_height = None
