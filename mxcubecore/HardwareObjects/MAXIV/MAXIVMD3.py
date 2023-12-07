@@ -124,7 +124,7 @@ class MAXIVMD3(GenericDiffractometer):
                 {"type": "exporter", "name": "FastShutterIsOpen"}, "FastShutterIsOpen"
             )
         except:
-            logging.getLogger("HWR").warning(
+            logging.getLogger("HWR").exception(
                 "Cannot initialize diffractometer Fast Shutter"
             )
 
@@ -283,7 +283,7 @@ class MAXIVMD3(GenericDiffractometer):
             self.channel_dict["ScintillatorPosition"].set_value(value)
             self.wait_device_ready(30)
         except Exception as ex:
-            logging.getLogger("HWR").error(
+            logging.getLogger("HWR").exception(
                 "Cannot set MD3 scintillator %s to %s " % (ex, value)
             )
 
