@@ -23,7 +23,7 @@ class BIOMAXMD3(MAXIVMD3):
         """
         Description:
         """
-        super().__init__(*args)
+        super().__init__(self, *args)
 
     def init(self):
         super().init()
