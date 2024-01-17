@@ -83,7 +83,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.acceptCentring = self.accept_centring
         self.startCentringMethod = self.start_centring_method
 
-
         self.phi_motor_hwobj = self.motor_hwobj_dict["phi"]
         self.phiz_motor_hwobj = self.motor_hwobj_dict["phiz"]
         self.phiy_motor_hwobj = self.motor_hwobj_dict["phiy"]
@@ -399,7 +398,9 @@ class MAXIVMD3(GenericDiffractometer):
         self.wait_device_ready(10)
         # move MD3 to Centring phase if it's not
         if self.get_current_phase() != "Centring":
-            logging.getLogger("user_level_log").info("Moving Diffractometer to Centring for automatic_centring")
+            logging.getLogger("user_level_log").info(
+                "Moving Diffractometer to Centring for automatic_centring"
+            )
             self.set_phase("Centring", wait=True, timeout=200)
         # wait shortly to make sure the camera exposure time is set for the right phase
         time.sleep(1)
@@ -753,8 +754,12 @@ class MAXIVMD3(GenericDiffractometer):
         )
 
     def wait_camera_exposure(self, value, timeout=10):
-        logging.getLogger("HWR").info("Waiting for camera exposure is set to %d" % value)
-        with gevent.Timeout(timeout, Exception("Timeout waiting for camera exposure setting")):
+        logging.getLogger("HWR").info(
+            "Waiting for camera exposure is set to %d" % value
+        )
+        with gevent.Timeout(
+            timeout, Exception("Timeout waiting for camera exposure setting")
+        ):
             exp_time = self.channel_dict["CameraExposure"].get_value()
             while int(exp_time) != value:
                 gevent.sleep(1)
