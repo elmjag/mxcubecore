@@ -16,9 +16,12 @@ class PrepareOpenHutch:
 
     Close safety shutter, close detector cover and move detector to a safe area
     """
+
     def __call__(self, *args, **kw):
         try:
-            logging.getLogger("HWR").info("Preparing experimental hutch for door openning.")
+            logging.getLogger("HWR").info(
+                "Preparing experimental hutch for door openning."
+            )
             if (
                 HWR.beamline.safety_shutter is not None
                 and HWR.beamline.safety_shutter.getShutterState() == "opened"
@@ -35,11 +38,17 @@ class PrepareOpenHutch:
             if HWR.beamline.detector is not None:
                 logging.getLogger("HWR").info("Moving detector to safe area...")
                 try:
-                    HWR.beamline.detector.distance_motor_hwobj.set_value(DET_SAFE_POSITION)
+                    HWR.beamline.detector.distance_motor_hwobj.set_value(
+                        DET_SAFE_POSITION
+                    )
                 except Exception:
-                    logging.getLogger("HWR").warning("Could not move detector to safe position")
+                    logging.getLogger("HWR").warning(
+                        "Could not move detector to safe position"
+                    )
         except Exception as ex:
-            logging.getLogger("HWR").exception("Could not PrepareOpenHutch. Error was {}".format(ex))
+            logging.getLogger("HWR").exception(
+                "Could not PrepareOpenHutch. Error was {}".format(ex)
+            )
 
 
 class CloseDetectorCover:
@@ -49,11 +58,13 @@ class CloseDetectorCover:
         """
         try:
             logging.getLogger("HWR").info("Closing the detector cover")
-            plc = tango.DeviceProxy('b312a/vac/plc-01')
+            plc = tango.DeviceProxy("b312a/vac/plc-01")
             plc.B312A_E06_DIA_DETC01_ENAC = 1
             plc.B312A_E06_DIA_DETC01_CLC = 1
         except Exception as ex:
-            logging.getLogger("HWR").exception("Could not close the detector cover. Error was {}".format(ex))
+            logging.getLogger("HWR").exception(
+                "Could not close the detector cover. Error was {}".format(ex)
+            )
 
 
 class OpenDetectorCover:
@@ -63,11 +74,13 @@ class OpenDetectorCover:
         """
         try:
             logging.getLogger("HWR").info("Opening the detector cover")
-            plc = tango.DeviceProxy('b312a/vac/plc-01')
+            plc = tango.DeviceProxy("b312a/vac/plc-01")
             plc.B312A_E06_DIA_DETC01_ENAC = 1
             plc.B312A_E06_DIA_DETC01_OPC = 1
         except Exception as ex:
-            logging.getLogger("HWR").exception("Could not close the detector cover. Error was {}".format(ex))
+            logging.getLogger("HWR").exception(
+                "Could not close the detector cover. Error was {}".format(ex)
+            )
 
 
 class BeamtimeEnd:
@@ -78,10 +91,12 @@ class BeamtimeEnd:
         try:
             prepare_open_hutch = PrepareOpenHutch()
             prepare_open_hutch()
-            cmd = self.getCommandObject('beamtime_end')
+            cmd = self.getCommandObject("beamtime_end")
             cmd(wait=True)
         except Exception as ex:
-            logging.getLogger("HWR").exception("Cannot end beamtime. Error was {}".format(ex))
+            logging.getLogger("HWR").exception(
+                "Cannot end beamtime. Error was {}".format(ex)
+            )
 
 
 class BeamtimeStart:
@@ -90,7 +105,9 @@ class BeamtimeStart:
         TBD: sardana macro not yet available in MicroMAX
         """
         try:
-            cmd = self.getCommandObject('beamtime_start')
+            cmd = self.getCommandObject("beamtime_start")
             cmd(wait=True)
         except Exception as ex:
-            logging.getLogger("HWR").error("Cannot start beamtime. Error was {}".format(ex))
+            logging.getLogger("HWR").error(
+                "Cannot start beamtime. Error was {}".format(ex)
+            )
