@@ -32,7 +32,8 @@ class BeamShape(Enum):
 @unique
 class HardwareObjectState(Enum):
     """Enumeration of common states, shared between all HardwareObjects"""
-# probably since BeamInfo inherits from Equipment
+
+    # probably since BeamInfo inherits from Equipment
     UNKNOWN = 0
     WARNING = 1
     BUSY = 2
@@ -62,9 +63,7 @@ class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
 
         self._aperture = self.get_object_by_role("aperture")
         if self._aperture is not None:
-            self.connect(
-                self._aperture, "valueChanged", self.aperture_pos_changed
-            )
+            self.connect(self._aperture, "valueChanged", self.aperture_pos_changed)
         else:
             logging.getLogger("HWR").debug("BeamInfo: Aperture hwobj not defined")
 
@@ -121,7 +120,7 @@ class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
         return {"type": ["enum"], "values": aperture_list}
 
     def get_state(self):
-        """ Getter for state attribute
+        """Getter for state attribute
 
         Implementations must query the hardware directly, to ensure current results
 
