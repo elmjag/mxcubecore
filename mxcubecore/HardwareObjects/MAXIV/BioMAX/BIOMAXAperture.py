@@ -5,8 +5,10 @@ from mxcubecore.HardwareObjects.abstract.AbstractActuator import AbstractActuato
 # from gevent import monkey
 # monkey.patch_all(thread=False)
 
+
 class BIOMAXAperture(AbstractActuator):
     """Aperture calss to change the diameter and emmiting messages"""
+
     POSITIONS = ("BEAM", "OFF", "PARK")
 
     def __init__(self, *args):
@@ -22,9 +24,7 @@ class BIOMAXAperture(AbstractActuator):
         self.aperture_position = self.add_channel(
             {"type": "exporter", "name": "AperturePosition"}, "AperturePosition"
         )
-        self.connect(
-                    self.aperture_position, "update", self.position_changed
-                )
+        self.connect(self.aperture_position, "update", self.position_changed)
 
         self.aperture_diameters = self.add_channel(
             {"type": "exporter", "name": "ApertureDiameters"}, "ApertureDiameters"
@@ -33,16 +33,14 @@ class BIOMAXAperture(AbstractActuator):
         self._diameter_size_list = self.aperture_diameters.get_value()
 
         self.current_aperture_diameters = self.add_channel(
-            {"type": "exporter", "name": "CurrentApertureDiameterIndex"}, 
-            "CurrentApertureDiameterIndex"
+            {"type": "exporter", "name": "CurrentApertureDiameterIndex"},
+            "CurrentApertureDiameterIndex",
         )
-        self.connect(
-                    self.current_aperture_diameters, "update", self.diameter_changed
-                )
+        self.connect(self.current_aperture_diameters, "update", self.diameter_changed)
 
         self.diameter_list = self.aperture_diameters.get_value()
         self.set_position = self.move_to_position
-    
+
     def set_diameter_size(self, diameter_size):
         """Setting new size for aperture diameter.
 
@@ -55,7 +53,7 @@ class BIOMAXAperture(AbstractActuator):
         if int(diameter_size) in self._diameter_size_list:
             self.current_aperture_diameters.set_value(
                 self._diameter_size_list.index(int(diameter_size))
-                )
+            )
             self._current_diameter_index = self.current_aperture_diameters.get_value()
             self._diameter_size_list = self.aperture_diameters.get_value()
             self.emit(
@@ -66,7 +64,7 @@ class BIOMAXAperture(AbstractActuator):
 
     def get_diameter_size(self):
         """getting the size of aperture diameter.
-        
+
         Args:
             None
 
@@ -76,10 +74,10 @@ class BIOMAXAperture(AbstractActuator):
         self._diameter_size_list = self.aperture_diameters.get_value()
         self._current_diameter_index = self.current_aperture_diameters.get_value()
         return self._diameter_size_list[self._current_diameter_index]
-    
+
     def get_diameter_size_list(self):
         """getting the list of available diameter sizes for aperture.
-        
+
         Args:
             None
 
@@ -90,7 +88,7 @@ class BIOMAXAperture(AbstractActuator):
 
     def move_to_position(self, position_name):
         """changing to the new position, "BEAM", "OFF" or "PARK".
-        
+
         Args:
             position name
 
@@ -117,7 +115,7 @@ class BIOMAXAperture(AbstractActuator):
 
     def get_position_list(self):
         """getting the available aperture positions.
-        
+
         Args:
             None
 
@@ -136,7 +134,7 @@ class BIOMAXAperture(AbstractActuator):
 
     def position_changed(self, position):
         self.emit("valueChanged", position)
-    
+
     def diameter_changed(self, diameter):
         self._current_diameter_index = diameter
         self.emit("valueChanged", diameter)

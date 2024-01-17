@@ -97,8 +97,8 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self.omega_reference_par = None
         self.centring_motors_list = eval(self.get_property("centring_motors"))
         queue_model_objects.CentredPosition.set_diffractometer_motor_names(
-                    *self.centring_motors_list
-                )
+            *self.centring_motors_list
+        )
 
     def abort(self):
         """Immediately terminate action."""
@@ -280,8 +280,7 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         Returns:
             list: phase list.
         """
-        return ('Unknown', 'Centring', 'DataCollection', 'BeamLocation', 'Transfer')
-
+        return ("Unknown", "Centring", "DataCollection", "BeamLocation", "Transfer")
 
     def _set_constraint(self, value):
         """Specific implementation to set the diffractometer to selected constraint
@@ -491,8 +490,10 @@ class MICROMAXMD3UP(AbstractDiffractometer):
         self.centring_hwobj.initCentringProcedure()
         self.centring_hwobj.appendCentringDataPoint(
             {
-                "X": (x - self.beam_position[0]) / self._exporter.read_property("CoaxCamScaleX"),
-                "Y": (y - self.beam_position[1]) / self._exporter.read_property("CoaxCamScaleY"),
+                "X": (x - self.beam_position[0])
+                / self._exporter.read_property("CoaxCamScaleX"),
+                "Y": (y - self.beam_position[1])
+                / self._exporter.read_property("CoaxCamScaleY"),
             }
         )
         self.omega_reference_add_constraint()
@@ -504,12 +505,11 @@ class MICROMAXMD3UP(AbstractDiffractometer):
 
     def motor_positions_to_screen(self, centring_dict):
 
-
         xy = self.centring_hwobj.centringToScreen(centring_dict)
         # x = xy["X"] * self._exporter.read_property("CoaxCamScaleX") + self.zoom_centre["x"]
-        x = xy["X"] * self._exporter.read_property("CoaxCamScaleX") 
+        x = xy["X"] * self._exporter.read_property("CoaxCamScaleX")
         # y = xy["Y"] * self._exporter.read_property("CoaxCamScaleY") + self.zoom_centre["y"]
-        y = xy["Y"] * self._exporter.read_property("CoaxCamScaleY") 
+        y = xy["Y"] * self._exporter.read_property("CoaxCamScaleY")
         return x, y
 
     def move_omega_relative(self, relative_angle):
@@ -527,23 +527,24 @@ class MICROMAXMD3UP(AbstractDiffractometer):
             return
         if self.omega_reference_par["camera_axis"].lower() == "x":
             on_beam = (
-                (self.beam_position[0] - self.zoom_centre["x"])
-                * self.omega_reference_par["direction"]
-                / self._exporter.read_property("CoaxCamScaleX")
-                + self.omega_reference_par["position"]
-            )
+                self.beam_position[0] - self.zoom_centre["x"]
+            ) * self.omega_reference_par["direction"] / self._exporter.read_property(
+                "CoaxCamScaleX"
+            ) + self.omega_reference_par[
+                "position"
+            ]
         else:
             on_beam = (
-                (self.beam_position[1] - self.zoom_centre["y"])
-                * self.omega_reference_par["direction"]
-                / self._exporter.read_property("CoaxCamScaleY")
-                + self.omega_reference_par["position"]
-            )
+                self.beam_position[1] - self.zoom_centre["y"]
+            ) * self.omega_reference_par["direction"] / self._exporter.read_property(
+                "CoaxCamScaleY"
+            ) + self.omega_reference_par[
+                "position"
+            ]
         self.centring_hwobj.appendMotorConstraint(self.omega_reference_motor, on_beam)
 
     def convert_from_obj_to_name(self, motor_pos):
-        """
-        """
+        """ """
         motors = {}
         for motor_role in self.centring_motors_list:
             motor_obj = self.get_object_by_role(motor_role)
@@ -552,12 +553,12 @@ class MICROMAXMD3UP(AbstractDiffractometer):
             except KeyError:
                 if motor_obj:
                     motors[motor_role] = motor_obj.get_value()
-        motors["beam_x"] = (
-            self.beam_position[0]
-        ) / self._exporter.read_property("CoaxCamScaleY")
-        motors["beam_y"] = (
-            self.beam_position[1]
-        ) / self._exporter.read_property("CoaxCamScaleX")
+        motors["beam_x"] = (self.beam_position[0]) / self._exporter.read_property(
+            "CoaxCamScaleY"
+        )
+        motors["beam_y"] = (self.beam_position[1]) / self._exporter.read_property(
+            "CoaxCamScaleX"
+        )
         motors["zoom"] = motors["zoom"].value
         return motors
 
