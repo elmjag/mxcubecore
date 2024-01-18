@@ -42,16 +42,16 @@ from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import (
 )
 import json
 import re
-CLEANR = re.compile('<.*?>')
+
+CLEANR = re.compile("<.*?>")
 
 
 def cleanhtml(raw_html):
-  cleantext = re.sub(CLEANR, '', raw_html)
-  return cleantext
+    cleantext = re.sub(CLEANR, "", raw_html)
+    return cleantext
 
 
 class MachInfo(AbstractMachineInfo):
-
     def __init__(self, *args):
         AbstractMachineInfo.__init__(self, *args)
         self.mach_info_channel = None
@@ -77,13 +77,17 @@ class MachInfo(AbstractMachineInfo):
     def _update_me(self):
         self.t0 = time.time()
         while True:
-            gevent.sleep(10)
+            gevent.sleep(30)
             _machine_message = cleanhtml(self.mach_info_channel.MachineMessage)
-            _machine_message = _machine_message.replace('R1', '\nR1')
-            _machine_message = _machine_message.replace('Linac', '\nLinac')
+            _machine_message = _machine_message.replace("R1", "\nR1")
+            _machine_message = _machine_message.replace("Linac", "\nLinac")
             self._message = _machine_message
-            self._message += "\nOperator mesage: " + cleanhtml(self.mach_info_channel.OperatorMessage)
-            self._message += "\nNext injection: " + self.mach_info_channel.R3NextInjection
+            self._message += "\nOperator mesage: " + cleanhtml(
+                self.mach_info_channel.OperatorMessage
+            )
+            self._message += (
+                "\nNext injection: " + self.mach_info_channel.R3NextInjection
+            )
             self._topup_remaining = self.mach_info_channel.R3TopUp
             try:
                 curr = self.curr_info_channel.Current
@@ -104,7 +108,7 @@ class MachInfo(AbstractMachineInfo):
             self.attention = False
             values = dict()
             values["current"] = self._current
-            values['message'] = self._message
+            values["message"] = self._message
             values["lifetime"] = self._lifetime
             values["attention"] = self.attention
             self.emit("machInfoChanged", values)
