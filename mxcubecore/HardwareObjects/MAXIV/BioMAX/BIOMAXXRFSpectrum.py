@@ -29,8 +29,10 @@ from gevent import monkey
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
+
 try:
     import detect_peaks
+
     peaks_available = True
 except ImportError:
     peaks_available = False
