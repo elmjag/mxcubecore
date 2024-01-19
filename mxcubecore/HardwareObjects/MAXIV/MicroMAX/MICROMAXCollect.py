@@ -973,7 +973,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         timeout = 5
         count_time = 0
         self.log.info("Opening the safety shutter.")
-        self.safety_shutter_hwobj.openShutter()
+        self.safety_shutter_hwobj.open()
         while (
             self.safety_shutter_hwobj.getShutterState() == "closed"
             and count_time < timeout
@@ -990,7 +990,7 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
         """
         # todo, add timeout, same as open
         self.log.info("Closing the safety shutter.")
-        self.safety_shutter_hwobj.closeShutter()
+        self.safety_shutter_hwobj.close()
         while self.safety_shutter_hwobj.getShutterState() == "opened":
             time.sleep(0.1)
 
