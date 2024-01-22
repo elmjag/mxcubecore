@@ -1,0 +1,176 @@
+import math
+import gevent
+from pathlib import Path
+from tango import DeviceProxy, DevState
+from mxcubecore.HardwareObjects.abstract.AbstractDetector import AbstractDetector
+from mxcubecore.BaseHardwareObjects import HardwareObjectState
+
+
+# time to wait between reading detector state, in seconds
+STATE_POLL_INTERVAL = 0.4
+DATA_ROOT_DIR = Path("/data/visitors/micromax")
+
+
+def us_to_sec(us) -> float:
+    """
+    convert microseconds (μs) to seconds
+    """
+    return us / 1_000_000.0
+
+
+def sec_to_us(sec) -> float:
+    """
+    convert seconds to microseconds (μs)
+    """
+    return sec * 1_000_000.0
+
+
+def ev_to_kev(ev: float) -> float:
+    """
+    convert eV value to KeV value
+    """
+    return ev / 1000.0
+
+
+def meter_to_mm(meters) -> float:
+    """
+    convert meters to millimeters (mm)
+    """
+    return meters * 1000.0
+
+
+class JungfrauDetector(AbstractDetector):
+    # pixel size in millimeters (75 µm)
+    PIXEL_SIZE = 0.075
+    FILE_SUFFIX = "h5"
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # set default values for some properties
+        self.set_property("model", "JUNGFRAU")
+        self.set_property("type", "charge integrating dynamic gain switching device")
+        self.set_property("manufacturer", "PSI")
+        self.set_property("file_suffix", self.FILE_SUFFIX)
+
+        self.col_config = {
+            "OmegaStart": None,
+            "OmegaIncrement": None,
+            "BeamCenterX": None,
+            "BeamCenterY": None,
+            "DetectorDistance": None,
+            "CountTime": None,
+            "NbImages": None,
+            "NbTriggers": None,
+            "ImagesPerFile": None,
+            "RoiMode": None,
+            "FilenamePattern": None,
+            "PhotonEnergy": None,
+            "TriggerMode": "exts",
+        }
+
+    def init(self):
+        super().init()
+        self.dev = DeviceProxy(self.detector_device)
+
+    def get_minimum_exposure_time(self) -> float:
+        """
+        current minimum exposure time, in seconds, inclusive
+        """
+        return us_to_sec(self.dev.frame_time_us)
+
+    def get_pixel_size_x(self):
+        return self.PIXEL_SIZE
+
+    def get_pixel_size_y(self):
+        return self.PIXEL_SIZE
+
+    def set_photon_energy(self, energy):
+        """
+        set energy, in KeV
+        """
+        self.dev.photon_energy_keV = ev_to_kev(energy)
+
+    def enable_filewriter(self):
+        # we don't need to enable Jungfrau file writer,
+        # it is always running, thus this is a NOP
+        pass
+
+    def enable_stream(self):
+        # not implemented
+        pass
+
+    def disable_stream(self):
+        # not implemented
+        pass
+
+    def prepare_acquisition(self, config):
+        def get_file_prefix():
+            file_name = Path(config["FilenamePattern"])
+            return str(file_name.relative_to(DATA_ROOT_DIR))
+
+        # make sure that detector is in 'idle' mode,
+        # otherwise we won't be able to arm it
+        self.stop_acquisition()
+
+        self.update_state(HardwareObjectState.BUSY)
+
+        #
+        # send acquisition parameters to the detector
+        #
+
+        dev = self.dev
+        dev.omega__start = config["OmegaStart"]
+        dev.omega__step = config["OmegaIncrement"]
+        dev.beam_x_pxl = config["BeamCenterX"]
+        dev.beam_y_pxl = config["BeamCenterY"]
+        dev.detector_distance_mm = meter_to_mm(config["DetectorDistance"])
+        dev.images_per_trigger = config["NbImages"]
+        dev.ntrigger = config["NbTriggers"]
+
+        exposure_time = sec_to_us(config["CountTime"])
+        dev.summation = math.ceil(exposure_time / dev.frame_time_us)
+
+        # hard-coded rotation axis
+        dev.write_attribute("omega__vector__#1", 0.0)
+        dev.write_attribute("omega__vector__#2", 1.0)
+        dev.write_attribute("omega__vector__#3", 0.0)
+
+        # set where file should be written
+        dev.file_prefix = get_file_prefix()
+
+        #
+        # Arm detector
+        #
+        dev.Arm()
+
+        self.update_state(HardwareObjectState.READY)
+
+    def stop_acquisition(self):
+        dev = self.dev
+
+        dev.Stop()
+
+        # Stop command requests the detector to stop any possible operations,
+        # which can take a while. We need to wait until detector goes into 'idle'
+        # mode, aka 'ON' state.
+        while dev.State() != DevState.ON:
+            gevent.sleep(STATE_POLL_INTERVAL)
+
+    def get_acquisition_time(self) -> float:
+        """
+        current acquisition time, in seconds
+        """
+        dev = self.dev
+        acq_time_us = dev.images_per_trigger * dev.frame_time_us * dev.summation
+        return us_to_sec(acq_time_us)
+
+    def wait_config_done(self):
+        # the config is fully applied when Arm command finishes in the
+        # prepare_acquisition() method above, thus no need to wait for anything
+        pass
+
+    def set_header_appendix(self, _):
+        # hopefully no need to do anything with the header on Jungfrau detectors,
+        # presumably they already contain required fields
+        pass
