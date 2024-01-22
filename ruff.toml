@@ -2124,6 +2124,11 @@ convention = "google"
     "TRY002",
     "TRY201",
 ]
+"mxcubecore/HardwareObjects/JungfrauDetector.py" = [
+    "TD002",
+    "TD003",
+    "FIX002",
+]
 "mxcubecore/HardwareObjects/LNLS/EPICSActuator.py" = [
     "E501",
     "EM101",
