@@ -1,210 +1,151 @@
-# -*- coding: utf-8 -*-
-"""
-File:  TangoShutter.py
+# encoding: utf-8
+#
+#  Project: MXCuBE
+#  https://github.com/mxcube
+#
+#  This file is part of MXCuBE software.
+#
+#  MXCuBE is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  MXCuBE is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with MXCuBE. If not, see <http://www.gnu.org/licenses/>.
 
-Description:
----------------------------------------------------------------
-Hardware Object to provide Shutter functionality through Tango
-or other compatible system. In fact any combination of HardwareRepository
-commands/states will work.
+""" TangoShutter class - interface for shutter controlled by TANGO
+Implements _set_value, get_value methods
 
-Two possible situations are supported by this hardware object:
-    - One state attribute
-    - Two action commands (in/out, open/close, insert/extract..)
+Tango states are:
+"UNKNOWN", "OPEN", "CLOSED", "FAULT", "MOVING", "DISABLE", "STANDBY", "RUNNING"
 
- or
-    - One read/write attribute with two states
-
-Signals
----------------------------------------------------------------
-This hardware object will emit signals:
-
-    stateChanged(new_state)
-
-The `new_state` will be one string out of:
-
-    'closed',
-    'opened',
-    'standby',
-    'alarm',
-    'unknown',
-    'fault',
-    'disabled',
-    'moving',
-    'init',
-    'automatic',
-    'running',
-    'insert',
-    'extract',
-
-The state strings will be converted from the state reported by the hardware by a conversion
-table detailed below. This table is inspired in the Tango.DevState possible values, but also
-in other cases like for example an attribute being True/False or other known real cases.
-
-Methods
----------------------------------------------------------------
-   openShutter()
-   closeShutter()
-
-Hardware to Shutter State conversion
----------------------------------------------------------------
-
-The following table details the conversion to shutter states from
-hardware state::
-
-  --------- --------------- ---------------
-  Hardware   Shutter         PyTango.DevState
-  --------- --------------- -------------------
-    False    'closed'
-    True     'opened'
-    0        'closed'
-    1        'opened'
-    4        'insert'
-    5        'extract'
-    6        'moving'
-    7        'standby'
-    8        'fault'
-    9        'init'
-   10        'running'
-   11        'alarm'
-   12        'disabled'
-   13        'unknown'
-   -1        'fault'
-   None      'unknown'
-  '_'        'automatic'
-  'UNKNOWN'  'unknown'        UNKNOWN
-  'CLOSE'    'closed'         CLOSE
-  'OPEN'     'opened'         OPEN
-  'INSERT'   'closed'         INSERT
-  'EXTRACT'  'opened'         EXTRACT
-  'MOVING'   'moving'         MOVING
-  'RUNNING'  'moving'         MOVING
-  'FAULT'    'fault'          FAULT
-  'DISABLE'  'disabled'       DISABLE
-  'ON'       'unknown'        ON
-  'OFF'      'fault'          OFF
-  'STANDBY'  'standby'        STANDBY
-  'ALARM'    'alarm'          ALARM
-  'INIT'     'init'           INIT
-  --------- ---------------
-
-XML Configuration Example:
----------------------------------------------------------------
-
-* With state attribute and open/close commands
-
-<device class = "TangoShutter">
-  <username>FrontEnd</username>
-  <tangoname>c-x1/sh-c1-4/1</tangoname>
+Example xml file:
+<object class = "TangoShutter">
+  <username>Safety Shutter</username>
+  <tangoname>ab/cd/ef</tangoname>
   <command type="tango" name="Open">Open</command>
   <command type="tango" name="Close">Close</command>
   <channel type="tango" name="State" polling="1000">State</channel>
-</device>
+  <values>{"OPEN": "MYOPEN", "NEWSTATE": [HardwareObjectState.BUSY, "MYSTATE"]}</values>
+</object>
 
-* With read/write attribute :
-
-In the example the tango attribute is called "exper_shutter"
-
-<device class = "TangoShutter">
-  <username>Fast Shutter</username>
-  <channel type="tango" name="State" tangoname="c-x2/sh-ex-12/fs" polling="events">exper_shutter</channel>
-</device>
-
+In the example the <values> property contains a dictionary that redefines or
+adds specific tango shutter states.
+When redefining a known state, only the VALUES Enum will be updated.
+When defining a new state (new key), the dictionary value should be a
+list. The new state is added to both the VALUES and the SPECIFIC_STATES Enum.
+Attention:
+ - do not use tuples or the python json parser will fail!
+ - the first element of the list should be a standard HardwareObjectState
+   member (see in BaseHardwareObjects.py)!
+The <values> property is optional.
 """
+
+import json
 from enum import Enum, unique
 from mxcubecore.HardwareObjects.abstract.AbstractShutter import AbstractShutter
 from mxcubecore.BaseHardwareObjects import HardwareObjectState
-import logging
+
+__copyright__ = """ Copyright © by the MXCuBE collaboration """
+__license__ = "LGPLv3+"
 
 
 @unique
-class ShutterStates(Enum):
+class TangoShutterStates(Enum):
     """Shutter states definitions."""
 
-    OPEN = HardwareObjectState.READY, 6
-    CLOSE = HardwareObjectState.READY, 7
-    MOVING = HardwareObjectState.BUSY, 8
-    DISABLED = HardwareObjectState.WARNING, 9
-    AUTOMATIC = HardwareObjectState.READY, 10
+    CLOSED = HardwareObjectState.READY, "CLOSED"
+    OPEN = HardwareObjectState.READY, "OPEN"
+    MOVING = HardwareObjectState.BUSY, "MOVING"
+    DISABLE = HardwareObjectState.WARNING, "DISABLE"
+    AUTOMATIC = HardwareObjectState.READY, "RUNNING"
+    UNKNOWN = HardwareObjectState.UNKNOWN, "RUNNING"
+    FAULT = HardwareObjectState.WARNING, "FAULT"
+    STANDBY = HardwareObjectState.WARNING, "STANDBY"
 
-# <command type="tango" tangoname="b311a-o/pss/bs-01" name="Open">Open</command>
-#   <command type="tango" tangoname="b311a-o/pss/bs-01" name="Close">Close</command>
-#   <channel type="tango" name="State" tangoname="b311a-o/pss/bs-01" polling="1000">State</channel
-
-@unique
-class BaseValueEnum(Enum):
-    """Defines only the compulsory values."""
-
-    OPEN = "OPEN"
-    CLOSE = "CLOSE"
-    UNKNOWN = "UNKNOWN"
 
 class TangoShutter(AbstractShutter):
-    VALUES = BaseValueEnum
+    """TANGO implementation of AbstractShutter"""
+
+    SPECIFIC_STATES = TangoShutterStates
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.open_cmd = None
+        self.close_cmd = None
+        self.state_channel = None
 
     def init(self):
-        self.state_value_str = "unknown"
-        try:
-            self.shutter_channel = self.get_channel_object("State")
-            self.shutter_channel.connect_signal("update", self.shutter_state_changed)
-        except KeyError:
-            logging.getLogger().warning(
-                "%s: cannot connect to shutter channel", self.name()
-            )
-
+        """Initilise the predefined values"""
+        super().init()
         self.open_cmd = self.get_command_object("Open")
         self.close_cmd = self.get_command_object("Close")
+        self.state_channel = self.get_channel_object("State")
+        self._initialise_values()
+        self.state_channel.connect_signal("update", self._update_value)
+        self.update_state()
 
-    def shutter_state_changed(self, value):
-        self.state_value_str = self._convert_state_to_str(value)
-        self.emit("shutterStateChanged", (self.state_value_str,))
+    def _update_value(self, value):
+        """Update the value.
+        Args:
+            value(str): The value reported by the state channel.
+        """
+        super().update_value(self.value_to_enum(str(value)))
 
-    def _convert_state_to_str(self, value):
-        state = str(value).upper()
+    def _initialise_values(self):
+        """Add specific tango states to VALUES and, if configured
+        in the xml file, to SPECIFIC_STATES"""
+        values_dict = {item.name: item.value for item in self.VALUES}
+        states_dict = {item.name: item.value for item in self.SPECIFIC_STATES}
+        values_dict.update(
+            {
+                "MOVING": "MOVING",
+                "DISABLE": "DISABLE",
+                "STANDBY": "STANDBY",
+                "FAULT": "FAULT",
+            }
+        )
         try:
-            state_str = ShutterStates[state]
-        except KeyError:
-            state_str = "unknown"
-        return state_str
+            config_values = json.loads(self.get_property("values"))
+            for key, val in config_values.items():
+                if isinstance(val, (tuple, list)):
+                    values_dict.update({key: val[1]})
+                    states_dict.update({key: tuple(val)})
+                else:
+                    values_dict.update({key: val})
+        except (ValueError, TypeError) as err:
+            print(f"Exception in _initialise_values(): {err}")
 
-    # def readShutterState(self):
-    #     state = self.shutter_channel.get_value(   )
-    #     return self._convert_state_to_str(state)
+        self.VALUES = Enum("ValueEnum", values_dict)
+        self.SPECIFIC_STATES = Enum("TangoShutterStates", states_dict)
 
-    def getShutterState(self):
-        return self.state_value_str
+    def get_state(self):
+        """Get the device state.
+        Returns:
+            (enum 'HardwareObjectState'): Device state.
+        """
+        try:
+            _state = self.get_value().name
+            return self.SPECIFIC_STATES[_state].value[0]
+        except (AttributeError, KeyError) as err:
+            print(f"Exception in get_state(): {err}")
+            return self.STATES.UNKNOWN
 
     def get_value(self):
-        state = self.shutter_channel.get_value()
-        try:
-            value = self.VALUES[str(state)]
-        except KeyError:
-            value = "UNKNOWN"
-        return value
+        """Get the device value
+        Returns:
+            (Enum): Enum member, corresponding to the 'VALUE' or UNKNOWN.
+        """
+        _val = str(self.state_channel.get_value())
+        return self.value_to_enum(_val)
 
     def _set_value(self, value):
-        """Implementation of specific set actuator logic.
-        Args:
-            value: target value
-        """
-        print('_set_value', value)
-        if value.value == 'OPEN':
-            self.open()
-        elif value.value == 'CLOSE':
-            self.close()  
-
-    def open(self, timeout=None):
-        # Try getting open command configured in xml
-        # If command is not defined then try writing the channel
-        if self.open_cmd is not None:
+        if value.name == "OPEN":
             self.open_cmd()
-        else:
-            self.shutter_channel.set_value(True)
-
-    def close(self):
-        # Try getting close command configured in xml
-        # If command is not defined try writing the channel
-        if self.close_cmd is not None:
+        elif value.name == "CLOSED":
             self.close_cmd()
-        else:
-            self.shutter_channel.set_value(False)
