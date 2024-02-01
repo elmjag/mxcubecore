@@ -20,6 +20,8 @@ from abstract.AbstractCollect import AbstractCollect
 from mxcubecore.HardwareObjects.GenericDiffractometer import GenericDiffractometer
 
 DET_SAFE_POSITION = 500
+# max time we wait for safety shutter to open, in seconds
+SAFETY_SHUTTER_TIMEOUT = 5.0
 
 
 class MICROMAXCollect(AbstractCollect, HardwareObject):
@@ -959,25 +961,16 @@ class MICROMAXCollect(AbstractCollect, HardwareObject):
 
     def open_safety_shutter(self):
         """
-        Descript. :
+        send 'open' request to safety shutter and wait until it's open
         """
-        # todo add time out? if over certain time, then stop acquisiion and
-        # popup an error message
-        if self.safety_shutter_hwobj.getShutterState() == "opened":
-            return
-        timeout = 5
-        count_time = 0
+        def wait_until_open():
+            with gevent.Timeout(SAFETY_SHUTTER_TIMEOUT, Exception("Could not open the safety shutter")):
+                while not self.safety_shutter_hwobj.is_open:
+                    gevent.sleep(0.01)
+
         self.log.info("Opening the safety shutter.")
         self.safety_shutter_hwobj.open()
-        while (
-            self.safety_shutter_hwobj.getShutterState() == "closed"
-            and count_time < timeout
-        ):
-            time.sleep(0.1)
-            count_time += 0.1
-        if self.safety_shutter_hwobj.getShutterState() == "closed":
-            self.log.exception("Could not open the safety shutter")
-            raise Exception("Could not open the safety shutter")
+        wait_until_open()
 
     def close_safety_shutter(self):
         """
