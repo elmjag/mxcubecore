@@ -3,9 +3,7 @@ A client for ISPyB Webservices.
 """
 
 import cgi
-import json
 import logging
-from datetime import datetime
 from urllib.parse import urljoin
 
 from ISPyBRestClient import ISPyBRestClient
