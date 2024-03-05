@@ -1,5 +1,4 @@
 import logging
-import math
 
 import gevent
 import lucid3
