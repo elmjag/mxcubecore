@@ -9,8 +9,6 @@ try:
     import lucid_core as lucid
 except ModuleNotFoundError:
     logging.getLogger("HWR").warning("[MAXIVMD3] Lucid cannot be imported.")
-import math
-
 from gevent import monkey
 
 from mxcubecore import HardwareRepository as HWR
@@ -805,7 +803,6 @@ class MAXIVMD3(GenericDiffractometer):
                             "[MAXIVMD3] Timeout while setting MD3 Camera exposure %s"
                             % (ex)
                         )
-                        pass
 
     def move_to_motors_positions(self, motors_positions, wait=False):
         """ """

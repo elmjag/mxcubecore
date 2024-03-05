@@ -1,12 +1,7 @@
 import array
-import base64
 import logging
-import math
 import time
-from threading import (
-    Event,
-    Thread,
-)
+from threading import Thread
 
 import gevent
 import numpy as np
