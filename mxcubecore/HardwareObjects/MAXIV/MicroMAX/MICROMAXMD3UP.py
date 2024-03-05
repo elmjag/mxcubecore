@@ -60,7 +60,6 @@ Example xml file:
 
 from gevent import Timeout, sleep
 import logging
-import math
 
 from mxcubecore.HardwareObjects.abstract.AbstractDiffractometer import (
     AbstractDiffractometer,

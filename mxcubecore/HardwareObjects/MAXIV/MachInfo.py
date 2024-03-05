@@ -40,7 +40,6 @@ from mxcubecore import HardwareRepository as HWR
 from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import (
     AbstractMachineInfo,
 )
-import json
 import re
 
 CLEANR = re.compile("<.*?>")
