@@ -15,7 +15,6 @@ class BIOMAXAperture(AbstractActuator):
         AbstractActuator.__init__(self, *args)
 
     def init(self):
-
         super().init()
 
         self.motor_name = self.get_property("motor_name")
