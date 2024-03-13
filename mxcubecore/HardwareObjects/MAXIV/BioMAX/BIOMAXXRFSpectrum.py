@@ -44,7 +44,7 @@ from mxcubecore.TaskUtils import cleanup
 
 monkey.patch_all(thread=False)
 
-MAX_TRANSMISSION = 1
+MAX_TRANSMISSION = 100
 
 
 class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
