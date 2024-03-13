@@ -186,7 +186,6 @@ class Energy(AbstractEnergy):
         self.energy_motor.stop()
 
     def check_beam(self):
-
         # check if mirror piezo feedback is running
         pidx = PyTango.DeviceProxy("b311a/ctl/pid-01")
         pidy = PyTango.DeviceProxy("b311a/ctl/pid-02")
