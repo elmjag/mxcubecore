@@ -1012,7 +1012,7 @@ class BIOMAXCollect(DataCollect):
         """
         try:
             logging.getLogger("HWR").info("Closing the detector cover")
-            self.detector_cover_hwobj.closeShutter()
+            self.detector_cover_hwobj.close()
         except:
             logging.getLogger("HWR").exception("Could not close the detector cover")
 
