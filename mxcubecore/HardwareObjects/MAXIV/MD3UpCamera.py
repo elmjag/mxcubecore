@@ -10,14 +10,16 @@ Supported properties:
 """
 import uuid
 import time
-import numpy
+import tango
 import struct
 import gevent
-import PyTango
+import logging
 from pathlib import Path
 from io import BytesIO
 from PIL import Image
 from mxcubecore.BaseHardwareObjects import HardwareObject
+
+log = logging.getLogger("HWR")
 
 # default polling interval for video frames, in milliseconds
 DEFAULT_POLL_INTERVAL = 50  # ~20 FPS
@@ -27,6 +29,20 @@ IMAGE_MODE_L = 0
 # rgb, 24-bit per pixel
 IMAGE_MODE_RGB = 6
 
+MISSING_FRAME_WIDTH = 1224
+MISSING_FRAME_HEIGHT = 1024
+MISSING_FRAME_COLOR = "pink"
+
+
+def _make_frame_missing_image() -> bytes:
+    image = Image.new(
+        "RGB", (MISSING_FRAME_WIDTH, MISSING_FRAME_HEIGHT), color=MISSING_FRAME_COLOR
+    )
+    buffer = BytesIO()
+    image.save(buffer, "JPEG")
+
+    return buffer.getvalue()
+
 
 class MD3UpCamera(HardwareObject):
     def __init__(self, name):
@@ -35,13 +51,14 @@ class MD3UpCamera(HardwareObject):
         self.device = None
         self._poll_images = False
         self._start_polling = gevent.event.Event()
+        self._frame_missing_image = _make_frame_missing_image()
 
     def init(self):
         # calculate polling interval in seconds
         self._poll_interval = (
             self.get_property("interval", DEFAULT_POLL_INTERVAL) / 1000
         )
-        self.device = PyTango.DeviceProxy(self.get_property("tangoname"))
+        self.device = tango.DeviceProxy(self.get_property("tangoname"))
         self.device.ping()
         gevent.spawn(self._poll)
 
@@ -75,17 +92,6 @@ class MD3UpCamera(HardwareObject):
     def take_snapshot(self, path, grayscale=False):
         _, _, jpg_data = self._get_jpg_image()
         Path(path).write_bytes(jpg_data)
-
-    def get_image_array(self):
-        """
-        get image in numpy array format
-
-        The image pixels are returned in numpy array. The array's
-        shape is (w,h,3), with each color on its own plane.
-        """
-        width, height, image = self._get_frame()
-        arry = numpy.asarray(image, dtype="uint8")
-        return arry, width, height
 
     def _get_frame(self):
         """
@@ -134,13 +140,19 @@ class MD3UpCamera(HardwareObject):
         """
         get one frame from tango device and encode it as jpeg
         """
-        width, height, image = self._get_frame()
+        try:
+            width, height, image = self._get_frame()
 
-        buffer = BytesIO()
-        image.save(buffer, "JPEG")
+            buffer = BytesIO()
+            image.save(buffer, "JPEG")
 
-        jpg_img = buffer.getvalue()
-        return width, height, jpg_img
+            jpg_img = buffer.getvalue()
+            return width, height, jpg_img
+        except tango.CommunicationFailed:
+            log.warning("failed to fetch video frame from MD3", exc_info=True)
+            # show the user the pink 'frame is missing' image,
+            # when we can't fetch latest video frame
+            return MISSING_FRAME_WIDTH, MISSING_FRAME_WIDTH, self._frame_missing_image
 
     def _poll(self):
         def fetch_images():
