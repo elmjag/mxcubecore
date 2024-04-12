@@ -532,12 +532,6 @@ class BIOMAXEiger(AbstractDetector):
         """
         self.set_value("ImageAppendix", value)
 
-    def set_header_appendix(self, value):
-        """
-        Meta data sent during arming
-        """
-        self.set_value("HeaderAppendix", value)
-
     def set_roi_mode(self, value):
         if value not in ["4M", "disabled"]:
             logging.getLogger("HWR").error("Cannot set roi mode")
