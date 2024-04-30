@@ -1,5 +1,4 @@
 import math
-import gevent
 from pathlib import Path
 from tango import DeviceProxy, DevState
 from mxcubecore.HardwareObjects.abstract.AbstractDetector import AbstractDetector
@@ -9,6 +8,12 @@ from mxcubecore.BaseHardwareObjects import HardwareObjectState
 # time to wait between reading detector state, in seconds
 STATE_POLL_INTERVAL = 0.4
 DATA_ROOT_DIR = Path("/data/visitors/micromax")
+
+TANGO_TO_HWO_STATES = {
+    DevState.ON: HardwareObjectState.READY,
+    DevState.RUNNING: HardwareObjectState.BUSY,
+    DevState.FAULT: HardwareObjectState.FAULT,
+}
 
 
 def us_to_sec(us) -> float:
@@ -73,6 +78,33 @@ class JungfrauDetector(AbstractDetector):
         super().init()
         self.dev = DeviceProxy(self.detector_device)
 
+        #
+        # pull detector's tango device state
+        # TODO: replace poller with event listener
+        #
+        channel = self.add_channel(
+            {
+                "type": "tango",
+                "name": "_chnState",
+                "tangoname": self.detector_device,
+                "polling": 300,
+            },
+            "State",
+        )
+        channel.connect_signal("update", self._state_changed)
+
+    def _state_changed(self, tango_state):
+        hwo_state = TANGO_TO_HWO_STATES.get(tango_state, HardwareObjectState.UNKNOWN)
+        self.update_state(hwo_state)
+
+    #
+    # Sends the software trigger to Jungfrau,
+    # This is not part of the AbstractDetector API,
+    # probably software triggering should be done differently.
+    #
+    def send_software_trigger(self):
+        self.dev.SoftwareTrigger()
+
     def get_minimum_exposure_time(self) -> float:
         """
         current minimum exposure time, in seconds, inclusive
@@ -113,8 +145,6 @@ class JungfrauDetector(AbstractDetector):
         # otherwise we won't be able to arm it
         self.stop_acquisition()
 
-        self.update_state(HardwareObjectState.BUSY)
-
         #
         # send acquisition parameters to the detector
         #
@@ -144,18 +174,9 @@ class JungfrauDetector(AbstractDetector):
         #
         dev.Arm()
 
-        self.update_state(HardwareObjectState.READY)
-
     def stop_acquisition(self):
-        dev = self.dev
-
-        dev.Stop()
-
-        # Stop command requests the detector to stop any possible operations,
-        # which can take a while. We need to wait until detector goes into 'idle'
-        # mode, aka 'ON' state.
-        while dev.State() != DevState.ON:
-            gevent.sleep(STATE_POLL_INTERVAL)
+        self.dev.Stop()
+        self.wait_ready()
 
     def get_acquisition_time(self) -> float:
         """
