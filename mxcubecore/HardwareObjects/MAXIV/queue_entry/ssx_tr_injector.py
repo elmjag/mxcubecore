@@ -1,17 +1,26 @@
 import json
 import logging
 from pydantic import BaseModel, Field
-from mxcubecore.model.queue_model_objects import DataCollection
 from mxcubecore import HardwareRepository as HWR
+from mxcubecore.model.queue_model_objects import DataCollection
 from mxcubecore.model.common import (
     CommonCollectionParamters,
     PathParameters,
     LegacyParameters,
     StandardCollectionParameters,
 )
+from mxcubecore.HardwareObjects.MAXIV import pandabox
 from .base import AbstractSsxQueueEntry
 
+
 log = logging.getLogger("queue_exec")
+
+
+def sec_to_ms(sec) -> float:
+    """
+    convert seconds to milliseconds (ms)
+    """
+    return sec * 1_000.0
 
 
 class InjectorUserCollectionParameters(BaseModel):
@@ -19,9 +28,11 @@ class InjectorUserCollectionParameters(BaseModel):
     num_images: int = Field(1000, gt=0, lt=10000000, title="Number of images")
     energy: float = Field()
     resolution: float = Field()
+    laser_pulse_delay: float = Field(0, title="Laser pulse delay (s)")
+    laser_pulse_width: float = Field(0, title="Laser pulse width (s)")
 
 
-class SsxInjectorQueueModel(DataCollection):
+class SsxTrInjectorQueueModel(DataCollection):
     pass
 
 
@@ -56,20 +67,42 @@ class InjectorTaskParameters(BaseModel):
         )
 
 
-class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
-    QMO = SsxInjectorQueueModel
+class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
+    QMO = SsxTrInjectorQueueModel
     DATA_MODEL = InjectorTaskParameters
-    NAME = "SSX Injector Collection"
+    NAME = "SSX Injector Time Resolved"
     REQUIRES = ["point", "line", "no_shape", "chip", "mesh"]
 
     def execute(self):
         super().execute()
         self.prepare_data_collection()
 
-        detector = HWR.beamline.detector
-        log.info("Sending software trigger to detector.")
-        detector.send_software_trigger()
+        #
+        # configure pandABox to generate desired trigger signals
+        #
+        params = self._data_model._task_data.user_collection_parameters
+        ssx_cfg = pandabox.SSXInjectConfig(
+            # TODO: should we also set ClockFrequency ?!
+            enable_jungfrau=True,
+            enable_custom_output=True,
+            custom_output_delay=sec_to_ms(params.laser_pulse_delay),
+            custom_output_pulse_width=sec_to_ms(params.laser_pulse_width),
+        )
+        pandabox.load_ssx_inject_schema(ssx_cfg)
+
+        #
+        # start acquisition
+        #
+        pandabox.start_clock()
+
+        #
+        # wait for acquisition to end
+        #
         log.info("Waiting for acquisition to finish.")
-        detector.wait_ready()
+        HWR.beamline.detector.wait_ready()
         log.info("Acquisition is finished.")
 
+        #
+        # stop generating trigger signals
+        #
+        pandabox.stop_clock()
