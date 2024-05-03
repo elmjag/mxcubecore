@@ -1371,7 +1371,9 @@ class MICROMAXCollect(DataCollect):
         self.close_detector_cover()
 
         # HVE head is recognized as PLATE by the MD3. We do nothing for those two cases
-        if manual_mode and not self.diffractometer_hwobj.head_type  == GenericDiffractometer.HEAD_TYPE_PLATE:
+        if manual_mode and not (
+            self.diffractometer_hwobj.head_type == GenericDiffractometer.HEAD_TYPE_PLATE
+        ):
             self.diffractometer_hwobj.set_phase("Transfer")
             self.move_detector(DET_SAFE_POSITION)
 
