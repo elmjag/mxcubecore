@@ -195,3 +195,7 @@ class JungfrauDetector(AbstractDetector):
         # hopefully no need to do anything with the header on Jungfrau detectors,
         # presumably they already contain required fields
         pass
+
+    def disarm(self):
+        # Jungfrau does not support disarming, so no-op
+        pass
