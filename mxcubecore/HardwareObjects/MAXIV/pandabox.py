@@ -3,7 +3,7 @@ from tango import DeviceProxy
 from dataclasses import dataclass
 
 
-TANGO_DEVICE = "b312a-eh/ctl/trigger-generator"
+TANGO_DEVICE = "B312A-A101232-CAB01/CTL/PANDA-01"
 
 
 log = logging.getLogger("HWR")
