@@ -1,4 +1,5 @@
 import json
+import gevent
 import logging
 from pydantic import BaseModel, Field
 from mxcubecore import HardwareRepository as HWR
@@ -116,3 +117,12 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
         # stop generating trigger signals
         #
         pandabox.stop_measurement()
+
+    def stop(self):
+        # stop generating trigger signals
+        pandabox.stop_measurement()
+        # give detector chance to finish last train of triggers
+        gevent.sleep(1.0)
+
+        # this will ask detector to stop acquisition
+        super().stop()

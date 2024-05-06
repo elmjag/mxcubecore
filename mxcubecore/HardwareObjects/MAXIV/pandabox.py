@@ -38,6 +38,10 @@ def load_ssx_inject_schema(conf: SSXInjectConfig):
     dev.CustomOutputDelay = conf.custom_output_delay
     dev.CustomOutputPulseWidth = conf.custom_output_pulse_width
 
+    # make sure measurement not running, before resetting counters,
+    # otherwise counters will have bogus values
+    dev.EnableMeasurement = False
+
     #
     # reset counters
     #
