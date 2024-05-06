@@ -72,4 +72,3 @@ class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
         log.info("Waiting for acquisition to finish.")
         detector.wait_ready()
         log.info("Acquisition is finished.")
-

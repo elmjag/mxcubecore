@@ -93,7 +93,7 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
         #
         # start acquisition
         #
-        pandabox.start_clock()
+        pandabox.start_measurement()
 
         #
         # wait for acquisition to end
@@ -105,4 +105,4 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
         #
         # stop generating trigger signals
         #
-        pandabox.stop_clock()
+        pandabox.stop_measurement()

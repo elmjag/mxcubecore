@@ -26,23 +26,35 @@ def load_ssx_inject_schema(conf: SSXInjectConfig):
     log.info(f"[PandABox] configuring 'ssx_inject' schema with {conf}")
 
     dev = _get_tango_dev()
-    dev.Schema = "ssx_inject"
+
+    # avoid reloading schema if it is already loaded,
+    # this way we don't reset attributes to default values,
+    # allowing users to tweak parameters outside MXCuBE
+    if dev.Schema != "ssx_inject":
+        dev.Schema = "ssx_inject"
+
     dev.EnableEiger = conf.enable_eiger
-    dev.EnableJungfrau = conf.enable_jungfrau
     dev.EnableCustomOutput = conf.enable_custom_output
     dev.CustomOutputDelay = conf.custom_output_delay
     dev.CustomOutputPulseWidth = conf.custom_output_pulse_width
 
+    #
+    # reset counters
+    #
+    dev.EnableShutterCount = False
+    dev.EnableShutterCount = True
 
-def _set_clock_running(clock_running: bool):
-    # here we assume that 'ssx_inject' schema is loaded
-    log.info(f"[PandABox] setting ClockRunning to {clock_running}")
-    _get_tango_dev().ClockRunning = clock_running
+    dev.EnableJungfrauCount = False
+    dev.EnableJungfrauCount = True
 
 
-def start_clock():
-    _set_clock_running(True)
+def _set_enable_measurement(enabled: bool):
+    _get_tango_dev().EnableMeasurement = enabled
 
 
-def stop_clock():
-    _set_clock_running(False)
+def start_measurement():
+    _set_enable_measurement(True)
+
+
+def stop_measurement():
+    _set_enable_measurement(False)
