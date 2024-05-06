@@ -26,6 +26,7 @@ def sec_to_ms(sec) -> float:
 class InjectorUserCollectionParameters(BaseModel):
     exp_time: float = Field(100e-6, gt=0, lt=1, title="Exposure time (s)")
     num_images: int = Field(1000, gt=0, lt=10000000, title="Number of images")
+    num_triggers: int = Field(1000, gt=0, lt=300_000, title="Number of triggers")
     energy: float = Field()
     resolution: float = Field()
     laser_pulse_delay: float = Field(0, title="Laser pulse delay (s)")
@@ -45,6 +46,12 @@ class InjectorTaskParameters(BaseModel):
 
     @staticmethod
     def update_dependent_fields(field_data):
+        #
+        # Jungfrau specific hacks
+        #
+        storage_cell_count = HWR.beamline.detector.get_storage_cell_count()
+        field_data["num_images"] = storage_cell_count * field_data["num_triggers"]
+
         return field_data
 
     @staticmethod
@@ -52,6 +59,7 @@ class InjectorTaskParameters(BaseModel):
         return json.dumps(
             {
                 "ui:order": [
+                    "num_triggers",
                     "num_images",
                     "exp_time",
                     "resolution",
@@ -61,8 +69,7 @@ class InjectorTaskParameters(BaseModel):
                 "ui:submitButtonOptions": {
                     "norender": "true",
                 },
-                "sub_sampling": {"ui:readonly": "true"},
-                "frequency": {"ui:readonly": "true"},
+                "num_images": {"ui:readonly": "true"},
             }
         )
 
@@ -75,14 +82,17 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
 
     def execute(self):
         super().execute()
-        self.prepare_data_collection()
+
+        num_triggers = (
+            self._data_model._task_data.user_collection_parameters.num_triggers
+        )
+        self.prepare_data_collection(num_triggers)
 
         #
         # configure pandABox to generate desired trigger signals
         #
         params = self._data_model._task_data.user_collection_parameters
         ssx_cfg = pandabox.SSXInjectConfig(
-            # TODO: should we also set ClockFrequency ?!
             enable_jungfrau=True,
             enable_custom_output=True,
             custom_output_delay=sec_to_ms(params.laser_pulse_delay),

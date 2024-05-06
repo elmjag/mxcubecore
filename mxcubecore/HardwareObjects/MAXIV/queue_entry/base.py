@@ -26,7 +26,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         queue_model = HWR.beamline.queue_model
         path_template.run_number = queue_model.get_next_run_number(path_template)
 
-    def prepare_data_collection(self):
+    def prepare_data_collection(self, num_triggers=1):
         """
         Prepare beamline for a SSX data collection, i.e.:
 
@@ -88,7 +88,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         det_cfg["BeamCenterX"] = beam_center_x
         det_cfg["BeamCenterY"] = beam_center_y
         det_cfg["DetectorDistance"] = collect.get_detector_distance()
-        det_cfg["NbTriggers"] = 1
+        det_cfg["NbTriggers"] = num_triggers
         det_cfg["CountTime"] = exp_time
         det_cfg["FilenamePattern"] = str(Path(root_dir, f"{path_prefix}_{run_number}"))
         detector.prepare_acquisition(det_cfg)
