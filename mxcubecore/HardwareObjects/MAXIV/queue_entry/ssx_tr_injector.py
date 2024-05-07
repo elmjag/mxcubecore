@@ -83,23 +83,22 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
 
     def execute(self):
         super().execute()
-
-        num_triggers = (
-            self._data_model._task_data.user_collection_parameters.num_triggers
-        )
-        self.prepare_data_collection(num_triggers)
+        params = self._data_model._task_data.user_collection_parameters
 
         #
         # configure pandABox to generate desired trigger signals
         #
-        params = self._data_model._task_data.user_collection_parameters
+
         ssx_cfg = pandabox.SSXInjectConfig(
             enable_jungfrau=True,
             enable_custom_output=True,
             custom_output_delay=sec_to_ms(params.laser_pulse_delay),
             custom_output_pulse_width=sec_to_ms(params.laser_pulse_width),
+            max_triggers=params.num_triggers,
         )
         pandabox.load_ssx_inject_schema(ssx_cfg)
+
+        self.prepare_data_collection(params.num_triggers)
 
         #
         # start acquisition

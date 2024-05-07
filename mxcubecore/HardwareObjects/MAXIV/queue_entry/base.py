@@ -97,7 +97,9 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         # change MD3 phase to data collection mode,
         # this moves in beam stop
         #
-        diffractometer.set_phase("DataCollection")
+        # Don't change MD3 phase for now, as there are issues with
+        # entering DataCollection for SSX experiments on MD3 level
+        # diffractometer.set_phase("DataCollection")
 
         #
         # open detector cover and fast shutter

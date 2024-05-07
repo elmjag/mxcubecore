@@ -16,6 +16,7 @@ class SSXInjectConfig:
     enable_custom_output: bool = False
     custom_output_delay: float = 0.0
     custom_output_pulse_width: float = 0.0
+    max_triggers: int = 0
 
 
 def _get_tango_dev():
@@ -37,6 +38,8 @@ def load_ssx_inject_schema(conf: SSXInjectConfig):
     dev.EnableCustomOutput = conf.enable_custom_output
     dev.CustomOutputDelay = conf.custom_output_delay
     dev.CustomOutputPulseWidth = conf.custom_output_pulse_width
+    dev.ClockRunning = True
+    dev.MaxJungfrauCounts = conf.max_triggers
 
     # make sure measurement not running, before resetting counters,
     # otherwise counters will have bogus values
