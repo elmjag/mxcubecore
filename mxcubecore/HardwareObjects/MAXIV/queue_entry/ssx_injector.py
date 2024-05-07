@@ -15,7 +15,7 @@ log = logging.getLogger("queue_exec")
 
 
 class InjectorUserCollectionParameters(BaseModel):
-    exp_time: float = Field(100e-6, gt=0, lt=1, title="Exposure time (s)")
+    exp_time: float = Field(100e-4, gt=0, lt=1, title="Exposure time (s)")
     num_images: int = Field(1000, gt=0, lt=10000000, title="Number of images")
     energy: float = Field()
     resolution: float = Field()
