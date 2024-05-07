@@ -73,6 +73,11 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         detector, collect, diffractometer = get_hwobjs()
 
         #
+        # open safety shutter
+        #
+        collect.open_safety_shutter()
+
+        #
         # move detector for selected resolution
         #
         collect.set_resolution(resolution)

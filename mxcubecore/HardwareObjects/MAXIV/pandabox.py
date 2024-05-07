@@ -39,6 +39,7 @@ def load_ssx_inject_schema(conf: SSXInjectConfig):
     dev.CustomOutputDelay = conf.custom_output_delay
     dev.CustomOutputPulseWidth = conf.custom_output_pulse_width
     dev.ClockRunning = True
+    dev.EnableCounterGate = True
     dev.MaxJungfrauCounts = conf.max_triggers
 
     # make sure measurement not running, before resetting counters,
@@ -55,13 +56,12 @@ def load_ssx_inject_schema(conf: SSXInjectConfig):
     dev.EnableJungfrauCount = True
 
 
-def _set_enable_measurement(enabled: bool):
-    _get_tango_dev().EnableMeasurement = enabled
-
-
 def start_measurement():
-    _set_enable_measurement(True)
+    dev = _get_tango_dev()
+    dev.EnableMeasurement = True
 
 
 def stop_measurement():
-    _set_enable_measurement(False)
+    dev = _get_tango_dev()
+    dev.EnableCounterGate = False
+    dev.EnableMeasurement = False
