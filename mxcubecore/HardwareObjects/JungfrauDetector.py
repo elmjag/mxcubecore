@@ -4,6 +4,8 @@ from tango import DeviceProxy, DevState
 from mxcubecore.HardwareObjects.abstract.AbstractDetector import AbstractDetector
 from mxcubecore.BaseHardwareObjects import HardwareObjectState
 
+# custom tango reply timeout
+TANGO_TIMEOUT_MS = 6000
 
 # time to wait between reading detector state, in seconds
 STATE_POLL_INTERVAL = 0.4
@@ -77,6 +79,9 @@ class JungfrauDetector(AbstractDetector):
     def init(self):
         super().init()
         self.dev = DeviceProxy(self.detector_device)
+        # Arm() command can block for more than 3 seconds,
+        # increase the default tango timeout
+        self.dev.set_timeout_millis(TANGO_TIMEOUT_MS)
 
         #
         # pull detector's tango device state
