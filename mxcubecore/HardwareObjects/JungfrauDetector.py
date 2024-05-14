@@ -14,6 +14,7 @@ DATA_ROOT_DIR = Path("/data/visitors/micromax")
 TANGO_TO_HWO_STATES = {
     DevState.ON: HardwareObjectState.READY,
     DevState.RUNNING: HardwareObjectState.BUSY,
+    DevState.OFF: HardwareObjectState.OFF,
     DevState.FAULT: HardwareObjectState.FAULT,
 }
 
