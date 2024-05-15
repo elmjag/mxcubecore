@@ -944,12 +944,8 @@ class MICROMAXCollect(DataCollect):
                     self.current_dc_parameters["xds_dir"],
                     self.current_dc_parameters["auto_dir"],
                 )
-            except Exception as ex:
-                self.log.error(
-                    "[COLLECT] Cannot generate crystfel input files, error was: {}".format(
-                        ex
-                    )
-                )
+            except Exception:
+                self.log.exception("[COLLECT] Cannot generate crystfel input files")
 
     def get_beam_centre(self):
         """
@@ -1106,7 +1102,9 @@ class MICROMAXCollect(DataCollect):
         Descript. :
         """
         i = 1
-        self.user_log.info("Creating (MAXIV-BioMAX) processing input file directories")
+        self.user_log.info(
+            "Creating (MAXIV-MicroMAX) processing input file directories"
+        )
 
         while True:
             if self.ssx_mode:

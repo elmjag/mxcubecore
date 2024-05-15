@@ -461,10 +461,8 @@ class MAXIVAutoProcessing(HardwareObject):
             content = template.safe_substitute(input_dict)
             with open(output, "w") as fout:
                 fout.write(content)
-        except Exception as ex:
-            self.log.error(
-                "[AutoProcessing] Error generating input file {}, {}".format(output, ex)
-            )
+        except Exception:
+            self.log.exception("[AutoProcessing] Error generating input file")
         self.log.info("[AutoProcessing] Generate input file {}".format(output))
 
     def find_spg_full_name(self, value):
