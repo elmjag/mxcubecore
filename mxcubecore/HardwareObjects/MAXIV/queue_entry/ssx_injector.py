@@ -3,13 +3,15 @@ import logging
 from pydantic import BaseModel, Field
 from mxcubecore.model.queue_model_objects import DataCollection
 from mxcubecore import HardwareRepository as HWR
+from mxcubecore.queue_entry.base_queue_entry import QueueExecutionException
 from mxcubecore.model.common import (
     CommonCollectionParamters,
     PathParameters,
     LegacyParameters,
     StandardCollectionParameters,
 )
-from .base import AbstractSsxQueueEntry
+from .base import AbstractSsxQueueEntry, restore_beamline
+
 
 log = logging.getLogger("queue_exec")
 
@@ -72,8 +74,7 @@ class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
     NAME = "SSX Injector Collection"
     REQUIRES = ["point", "line", "no_shape", "chip", "mesh"]
 
-    def execute(self):
-        super().execute()
+    def _do_data_collection(self):
         self.prepare_data_collection()
 
         detector = HWR.beamline.detector
@@ -82,3 +83,12 @@ class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
         log.info("Waiting for acquisition to finish.")
         detector.wait_ready()
         log.info("Acquisition is finished.")
+
+    def execute(self):
+        try:
+            super().execute()
+            self._do_data_collection()
+        except Exception as ex:
+            raise QueueExecutionException(str(ex), self)
+        finally:
+            restore_beamline()

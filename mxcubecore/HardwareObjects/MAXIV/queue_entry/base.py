@@ -7,6 +7,26 @@ from mxcubecore import HardwareRepository as HWR
 log = logging.getLogger("queue_exec")
 
 
+def restore_beamline():
+    collect = HWR.beamline.collect
+
+    #
+    # close fast shutter
+    #
+    try:
+        collect.close_fast_shutter()
+    except Exception:
+        log.exception("Error while closing fast shutter.")
+
+    #
+    # close detector cover
+    #
+    try:
+        collect.close_detector_cover()
+    except Exception:
+        log.exception("Error while closing detector cover.")
+
+
 class AbstractSsxQueueEntry(BaseQueueEntry):
     """
     Contains common code utilized by 'SSX Injector' and 'SSX Time Resolved Injector' queue
@@ -134,13 +154,3 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         super().stop()
         log.info("Aborting acquisition.")
         HWR.beamline.detector.stop_acquisition()
-
-    def post_execute(self):
-        super().post_execute()
-
-        #
-        # close fast shutter and detector cover
-        #
-        collect = HWR.beamline.collect
-        collect.close_fast_shutter()
-        collect.close_detector_cover()

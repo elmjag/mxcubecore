@@ -4,6 +4,7 @@ import logging
 from pydantic import BaseModel, Field
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.model.queue_model_objects import DataCollection
+from mxcubecore.queue_entry.base_queue_entry import QueueExecutionException
 from mxcubecore.model.common import (
     CommonCollectionParamters,
     PathParameters,
@@ -11,7 +12,7 @@ from mxcubecore.model.common import (
     StandardCollectionParameters,
 )
 from mxcubecore.HardwareObjects.MAXIV import pandabox
-from .base import AbstractSsxQueueEntry
+from .base import AbstractSsxQueueEntry, restore_beamline
 
 
 log = logging.getLogger("queue_exec")
@@ -95,8 +96,7 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
     NAME = "SSX Injector Time Resolved"
     REQUIRES = ["point", "line", "no_shape", "chip", "mesh"]
 
-    def execute(self):
-        super().execute()
+    def _do_data_collection(self):
         params = self._data_model._task_data.user_collection_parameters
 
         #
@@ -130,6 +130,15 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
         # stop generating trigger signals
         #
         pandabox.stop_measurement()
+
+    def execute(self):
+        try:
+            super().execute()
+            self._do_data_collection()
+        except Exception as ex:
+            raise QueueExecutionException(str(ex), self)
+        finally:
+            restore_beamline()
 
     def stop(self):
         # stop generating trigger signals
