@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from mxcubecore.queue_entry.base_queue_entry import BaseQueueEntry
 from mxcubecore import HardwareRepository as HWR
-
+from mxcubecore.model import queue_model_objects
 
 log = logging.getLogger("queue_exec")
 
@@ -81,7 +81,12 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
 
         def get_hwobjs():
             beamline = HWR.beamline
-            return beamline.detector, beamline.collect, beamline.diffractometer
+            return (
+                beamline.detector,
+                beamline.collect,
+                beamline.diffractometer,
+                beamline.session,
+            )
 
         #
         # fetch task parameters from model object
@@ -102,7 +107,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
             run_number,
         ) = get_params()
 
-        detector, collect, diffractometer = get_hwobjs()
+        detector, collect, diffractometer, session = get_hwobjs()
 
         #
         # open safety shutter
@@ -135,6 +140,16 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         det_cfg["UnitCellBeta"] = cell_beta
         det_cfg["UnitCellGamma"] = cell_gamma
         detector.prepare_acquisition(det_cfg)
+
+        #
+        # create CrystFEL input files
+        #
+        dc_params = queue_model_objects.to_collect_dict(
+            self._data_model, session, self._data_model.get_sample_node()
+        )
+        collect.current_dc_parameters = dc_params[0]
+        collect.create_file_directories()
+        collect.generate_crystfel_input_files(det_cfg)
 
         #
         # change MD3 phase to data collection mode,
