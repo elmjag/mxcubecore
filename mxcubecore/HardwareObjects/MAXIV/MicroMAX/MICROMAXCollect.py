@@ -1261,6 +1261,7 @@ class MICROMAXCollect(DataCollect):
         self.diffractometer_hwobj.abort()
         self.detector_hwobj.abort()
         self.detector_hwobj.disarm()
+        self.move_to_centered_position()
 
         try:
             self.progress_task.kill(block=False)
