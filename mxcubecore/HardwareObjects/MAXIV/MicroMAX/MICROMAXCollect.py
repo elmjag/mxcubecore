@@ -1422,6 +1422,9 @@ class MICROMAXCollect(DataCollect):
     def get_measured_intensity(self):
         return float(self.get_flux())
 
+    def move_detector_to_safe_position(self):
+        self.move_detector(DET_SAFE_POSITION)
+
     def prepare_for_new_sample(self, manual_mode=True):
         """
         Descript.: prepare beamline for a new sample,
@@ -1435,7 +1438,7 @@ class MICROMAXCollect(DataCollect):
             self.diffractometer_hwobj.head_type == GenericDiffractometer.HEAD_TYPE_PLATE
         ):
             self.diffractometer_hwobj.set_phase("Transfer")
-            self.move_detector(DET_SAFE_POSITION)
+            self.move_detector_to_safe_position()
 
         self.close_safety_shutter()
 
