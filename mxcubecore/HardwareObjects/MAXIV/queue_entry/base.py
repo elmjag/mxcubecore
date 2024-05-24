@@ -7,6 +7,13 @@ from mxcubecore.model import queue_model_objects
 log = logging.getLogger("queue_exec")
 
 
+def mm_to_meter(millimeters) -> float:
+    """
+    convert millimeters (mm) to meters
+    """
+    return millimeters / 1000.0
+
+
 def restore_beamline():
     collect = HWR.beamline.collect
 
@@ -129,7 +136,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         det_cfg["OmegaIncrement"] = 0.0
         det_cfg["BeamCenterX"] = beam_center_x
         det_cfg["BeamCenterY"] = beam_center_y
-        det_cfg["DetectorDistance"] = collect.get_detector_distance()
+        det_cfg["DetectorDistance"] = mm_to_meter(collect.get_detector_distance())
         det_cfg["NbTriggers"] = num_triggers
         det_cfg["CountTime"] = exp_time
         det_cfg["FilenamePattern"] = str(Path(root_dir, f"{path_prefix}_{run_number}"))
