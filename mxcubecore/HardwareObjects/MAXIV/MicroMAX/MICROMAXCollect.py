@@ -1406,8 +1406,10 @@ class MICROMAXCollect(DataCollect):
         # disable it temporarily until the EM works properly
 
         try:
+            self.close_detector_cover()
             ori_motors, ori_phase = self.diffractometer_hwobj.set_calculate_flux_phase()
-            flux = self.flux_hwobj.get_instant_flux()
+            self.open_fast_shutter()
+            flux = self.flux_hwobj.calc_flux()
         except Exception as ex:
             self.log.error(
                 "[COLLECT] Cannot get the current flux value. Error was {}".format(ex)
