@@ -155,8 +155,16 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
             self._data_model, session, self._data_model.get_sample_node()
         )
         collect.current_dc_parameters = dc_params[0]
+
+        # SSX mode must be enabled in collect when generating CrystFEL files
+        old_ssx_mode = collect.ssx_mode
+        collect.ssx_mode = True
+
         collect.create_file_directories()
         collect.generate_crystfel_input_files(det_cfg)
+
+        # restore old SSX mode state
+        collect.ssx_mode = old_ssx_mode
 
         #
         # change MD3 phase to data collection mode,
