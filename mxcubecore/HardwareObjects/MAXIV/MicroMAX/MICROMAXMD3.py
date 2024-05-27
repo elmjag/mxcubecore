@@ -1,16 +1,10 @@
 import logging
 
-import gevent
 import lucid3
-import numpy as np
 from gevent import monkey
-from PIL import Image
 
 from mxcubecore import HardwareRepository as HWR
-from mxcubecore.HardwareObjects.GenericDiffractometer import (
-    DiffractometerState,
-    GenericDiffractometer,
-)
+from mxcubecore.HardwareObjects.GenericDiffractometer import GenericDiffractometer
 from mxcubecore.HardwareObjects.MAXIV.MAXIVMD3 import MAXIVMD3
 
 monkey.patch_all(thread=False)
@@ -162,18 +156,18 @@ class MICROMAXMD3(MAXIVMD3):
         ori_phase = self.current_phase
         if self.current_phase != "DataCollection":
             self.set_phase("DataCollection", wait=True, timeout=200)
-        self.motor_hwobj_dict['phiz'].set_value(2)
+        self.motor_hwobj_dict["phiz"].set_value(2)
         self.set_organ_pos("beamstopZ", -10)
         self.wait_ready(10)
         return ori_motors, ori_phase
 
     def set_organ_pos(self, motor_name, pos_name):
         try:
-            if motor_name =="beamstop":
+            if motor_name == "beamstop":
                 self.command_dict["setBeamstopPosition"](pos_name)
                 self.wait_device_ready(DEFAULT_PHASE_TIMEOUT)
                 return
-            elif motor_name =="cameraExposure":
+            elif motor_name == "cameraExposure":
                 name = "CameraExposure"
             else:
                 name = "{}{}Position".format(motor_name[0].upper(), motor_name[1:])
@@ -185,4 +179,3 @@ class MICROMAXMD3(MAXIVMD3):
             )
             logging.getLogger("HWR").error(error_msg)
             raise
-
