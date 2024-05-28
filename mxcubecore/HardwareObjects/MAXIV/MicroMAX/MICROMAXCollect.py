@@ -1403,8 +1403,6 @@ class MICROMAXCollect(DataCollect):
         Descript. : get the instant flux value, w/o checking beamstability
         this method assuming that the MD3 is already in datacollection phase
         """
-        # disable it temporarily until the EM works properly
-
         try:
             self.close_detector_cover()
             ori_motors, ori_phase = self.diffractometer_hwobj.set_calculate_flux_phase()

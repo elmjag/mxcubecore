@@ -1,9 +1,6 @@
 from mxcubecore.HardwareObjects.abstract.AbstractFlux import AbstractFlux
 from mxcubecore import HardwareRepository as HWR
 import numpy as np
-import logging
-import time
-import gevent
 import tango
 
 
@@ -57,13 +54,8 @@ class MICROMAXFlux(AbstractFlux):
         self.det_mot = {}
 
     def init(self):
-        self.logger = logging.getLogger("HWR")
-        
         self.energy_hwobj = self.get_object_by_role('energy')
         self.detector_hwobj = HWR.beamline.detector
-        self.diffractometer_hwobj = HWR.beamline.diffractometer
-        self.beam_info_hwobj = self.get_object_by_role("beam_info")
-        self.energy_mot = tango.DeviceProxy('pseudomotor/mono_energy_ctrl/1')
         self.opt_diode["ch1"] = tango.DeviceProxy("expchan/albaem_ctrl_02/2")
         self.opt_diode["ch2"] = tango.DeviceProxy("expchan/albaem_ctrl_02/3")
         self.opt_diode["ch3"] = tango.DeviceProxy("expchan/albaem_ctrl_02/4")
@@ -73,34 +65,8 @@ class MICROMAXFlux(AbstractFlux):
         self.diode["eiger"] = tango.DeviceProxy("expchan/albaem_ctrl_04/2")
         self.det_mot["eiger"] = tango.DeviceProxy("b312a-e06/dia/tabled-01-zi")
 
-             
-    def get_flux(self):
+    def get_value(self):
         return self.current_flux
-
-    def get_instant_flux(self):
-
-        # get_instant_flux
-        try:
-            self.current_flux = self._get_instant_flux()
-        except Exception as ex:
-            self.logger.error("ERROR acquiring! %s", str(ex))
-
-        try:
-            self.diffractometer_hwobj.close_fast_shutter()
-            self.logger.info("Fast shutter closed!")
-        except Exception as ex:
-            self.logger.error("Cannot close fast shutter! %s", str(ex))
-
-
-    def wait_safety_shutter_open(self):
-        with gevent.Timeout(10, RuntimeError('Timeout waiting for safety shutter open')):
-            while self.shutter_hwobj.readShutterState() != 'opened':
-                gevent.sleep(0.2)
-
-    def wait_fast_shutter_open(self, timeout=5):
-        with gevent.Timeout(timeout, RuntimeError('Timeout waiting for safety shutter open')):
-            while not self.diffractometer_hwobj.is_fast_shutter_open():
-                gevent.sleep(0.2)
 
     def transmit(self, length, energy, model):
         att_l = model[0] * energy**7 + model[1] * energy**6 \
@@ -120,7 +86,6 @@ class MICROMAXFlux(AbstractFlux):
         full_flux = flux / air_transmission
         return full_flux
 
-
     def calc_flux(self):
         """
         det can be "jungfrau" or "eiger"
@@ -130,11 +95,6 @@ class MICROMAXFlux(AbstractFlux):
         det = tmp.lower()
         det_dist = self.det_mot[det].Position
         current = self.diode[det].InstantCurrent
-        """
-        energy_ev = 12500
-        current = 6.70E-04
-        det_dist = 900
-        """
         flux = self._calc_flux(energy_ev, det_dist, current)
         print("Current on the detector photodiode is {}".format(current))
         return flux
