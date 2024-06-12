@@ -1,41 +1,30 @@
-"""
-[Name] MachInfo
-
-[Description]
-Polls the configured accelerator status tango devices.
-Reads info such as ring current, life-time, operator message, etc.
-
-[Emitted signals]
-machInfoChanged
-   pars:  values (dict)
-
-   mandatory fields:
-     values['current']  type: str; desc: synchrotron radiation current in milli-amps
-     values['message']  type: str; desc: message from control room
-     values['attention'] type: boolean; desc: False (if no special attention is required)
-                                            True (if attention should be raised to the user)
-
-   optional fields:
-      any number of optional fields can be sent over with this signal by adding them in the
-      values dictionary
-
-      for example:
-         values['lifetime']
-         values['topup_remaining']
-"""
-
+import re
 import logging
 import gevent
-import tango
-from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import (
-    AbstractMachineInfo,
-)
-import re
+from tango import DeviceProxy
+from mxcubecore.HardwareObjects.abstract.AbstractMachineInfo import AbstractMachineInfo
 
+
+# how often we refresh machine info
+REFRESH_PERIOD_SEC = 30
 CLEANR = re.compile("<.*?>")
 
 
 log = logging.getLogger("HWR")
+
+
+def sec_to_hour(sec) -> float:
+    """
+    convert seconds to hours
+    """
+    return sec / (60 * 60)
+
+
+def A_to_mA(amp) -> float:
+    """
+    convert Ampere (A) to milli Ampere (mA)
+    """
+    return amp * 1000
 
 
 def cleanhtml(raw_html):
@@ -43,80 +32,73 @@ def cleanhtml(raw_html):
     return cleantext
 
 
+def catch_errs(func):
+    """
+    run wrapped function, catching all exception
+
+    If an exception as raised, log the exception and return 'unknown'
+    """
+
+    def wrapper(*a, **kw):
+        try:
+            return func(*a, **kw)
+        except Exception:
+            log.exception("error fetching machine info")
+            return "unknown"
+
+    return wrapper
+
+
 class MachInfo(AbstractMachineInfo):
     def __init__(self, *args):
-        AbstractMachineInfo.__init__(self, *args)
-        self.mach_info_channel = None
-        self.mach_curr_channel = None
-        self._fill_mode = None
+        super().__init__(*args)
+        self.mach_info = None
+        self.mach_curr = None
 
     def init(self):
-        self._fill_mode = self.get_property("filling_mode")
+        super().init()
 
+        self.mach_info = self._get_tango_device("mach_info")
+        self.mach_curr = self._get_tango_device("current")
+        gevent.spawn(self._refresh_ticker)
+
+    def _get_tango_device(self, property_name: str) -> DeviceProxy:
+        dev_name = self.get_property(property_name)
         try:
-            channel = self.get_property("mach_info")
-            self.mach_info_channel = tango.DeviceProxy(channel)
+            return DeviceProxy(dev_name)
         except Exception:
-            log.warning("Error initializing machine info channel", exc_info=True)
+            log.exception(f"error connecting to machine info tango device {dev_name}")
 
-        try:
-            channel_current = self.get_property("current")
-            self.mach_curr_channel = tango.DeviceProxy(channel_current)
-        except Exception:
-            log.warning("Error initializing current info channel", exc_info=True)
-
-        gevent.spawn(self._poll_info)
-
-    def _poll_info(self):
+    def _refresh_ticker(self):
         while True:
-            _machine_message = cleanhtml(self.mach_info_channel.MachineMessage)
-            _machine_message = _machine_message.replace("R1", "\nR1")
-            _machine_message = _machine_message.replace("Linac", "\nLinac")
-            self._message = _machine_message
-            self._message += "\nOperator mesage: " + cleanhtml(
-                self.mach_info_channel.OperatorMessage
-            )
-            self._message += (
-                "\nNext injection: " + self.mach_info_channel.R3NextInjection
-            )
-            self._topup_remaining = self.mach_info_channel.R3TopUp
-            try:
-                curr = self.mach_curr_channel.Current
-            except:
-                curr = 0.00
+            self.update_value()
+            gevent.sleep(REFRESH_PERIOD_SEC)
 
-            if curr < 0:
-                self._current = 0.00
-            else:
-                self._current = "{:.2f}".format(curr * 1000)
-            try:
-                self._lifetime = float(
-                    "{:.2f}".format(self.mach_curr_channel.Lifetime / 3600)
-                )
-            except:
-                self._lifetime = 0.00
+    @catch_errs
+    def get_current(self) -> str:
+        current = A_to_mA(self.mach_curr.Current)
+        return f"{current:.2f} mA"
 
-            self.attention = False
-            values = dict()
-            values["current"] = self._current
-            values["message"] = self._message
-            values["lifetime"] = self._lifetime
-            values["attention"] = self.attention
-            self.emit("valueChanged", values)
+    @catch_errs
+    def get_fillmode(self) -> str:
+        return self.mach_info.R3Mode
 
-            gevent.sleep(30)
+    @catch_errs
+    def get_message(self) -> str:
+        return self.mach_info.OperatorMessage
 
-    def get_current(self):
-        return self._current
+    @catch_errs
+    def get_lifetime(self) -> str:
+        lifetime = sec_to_hour(self.mach_curr.Lifetime)
+        return f"{lifetime:.2f} h"
 
-    def get_lifetime(self):
-        return self._lifetime
+    @catch_errs
+    def get_injection(self) -> str:
+        return self.mach_info.R3NextInjection
 
-    def get_topup_remaining(self):
-        return self._topup_remaining
+    @catch_errs
+    def get_status(self) -> str:
+        message = cleanhtml(self.mach_info.MachineMessage)
+        message = message.replace("R1", " R1").replace("Linac", " Linac")
 
-    def get_fill_mode(self) -> str:
-        return self._fill_mode
-
-    def get_message(self):
-        return self._message
+        return message
