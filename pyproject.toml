@@ -2,7 +2,7 @@
 name = "mxcubecore"
 version = "1.129.0"
 license = "LGPL-3.0-or-later"
-description = "Core libraries for the MXCuBE application"
+description = "Core libraries for the MXCuBE application WWWW"
 authors = ["The MXCuBE collaboration <mxcube@esrf.fr>"]
 maintainers = [
     "Marcus Oscarsson <mxcube@esrf.fr>",
