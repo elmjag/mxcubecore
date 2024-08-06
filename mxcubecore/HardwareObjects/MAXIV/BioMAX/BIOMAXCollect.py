@@ -233,7 +233,7 @@ class BIOMAXCollect(DataCollect):
                 if not os.path.exists(archive_directory):
                     try:
                         self.create_directories(archive_directory)
-                    except:
+                    except os.error:
                         logging.getLogger("HWR").exception(
                             "Collection: Error creating archive directory"
                         )
@@ -278,7 +278,7 @@ class BIOMAXCollect(DataCollect):
             self.close_fast_shutter()
             self.close_detector_cover()
 
-    def prepare_acquisition(self):
+    def prepare_acquisition(self):  # noqa
         """todo
         1. check the currrent value is the same as the tobeset value
         2. check how to add detroi in the mode
@@ -541,7 +541,7 @@ class BIOMAXCollect(DataCollect):
             logging.getLogger("HWR").error("[COLLECT] Runtime Error: %s" % ex)
             self.close_detector_cover()
             raise Exception("data collection hook failed... ", str(ex))
-        except:
+        except Exception:
             self.data_collection_cleanup()
             logging.getLogger("HWR").error("Unexpected error:", sys.exc_info()[0])
             self.close_detector_cover()
@@ -595,7 +595,9 @@ class BIOMAXCollect(DataCollect):
                 wait=wait,
             )
         else:
-            self.diffractometer_hwobj.do_oscillation_scan(start, end, exptime, wait=wait)
+            self.diffractometer_hwobj.do_oscillation_scan(
+                start, end, exptime, wait=wait
+            )
 
     def _update_task_progress(self):
         logging.getLogger("HWR").info("[BIOMAXCOLLECT] update task progress launched")
@@ -820,7 +822,7 @@ class BIOMAXCollect(DataCollect):
             "[COLLECT] Generating thumbnails, data path: %s" % data_path
         )
         script = "/mxn/groups/sw/mxsw/mxcube_scripts/generate_thumbnail"
-        cmd = f"ssh clu0-fe-0 {script} {data_path} {nimages} {jpeg_thumbnail_full_path}"
+        cmd = f"ssh clu0-fe-0 {script} {data_path} {frame_number} {jpeg_thumbnail_full_path}"
         logging.getLogger("HWR").info(cmd)
         os.system(cmd)
 
@@ -901,7 +903,7 @@ class BIOMAXCollect(DataCollect):
             if not os.path.exists(snapshot_directory):
                 try:
                     self.create_directories(snapshot_directory)
-                except:
+                except os.error:
                     logging.getLogger("HWR").exception(
                         "Collection: Error creating snapshot directory"
                     )
@@ -1100,7 +1102,7 @@ class BIOMAXCollect(DataCollect):
                     raise
             """
             # os.symlink(files_directory, os.path.join(process_directory, "img"))
-        except:
+        except os.error:
             logging.exception("Could not create processing file directory")
             return
         if xds_directory:
@@ -1244,7 +1246,7 @@ class BIOMAXCollect(DataCollect):
 
         try:
             config["ImagesPerFile"] = oscillation_parameters["images_per_file"]
-        except:
+        except KeyError:
             config["ImagesPerFile"] = 100
 
         if nframes_per_trigger * ntrigger < config["ImagesPerFile"]:
@@ -1372,7 +1374,7 @@ class BIOMAXCollect(DataCollect):
             chan = self.get_channel_object("undulator_gap")
             gap = "{:.2f}".format(chan.getValue())
             return gap
-        except:
+        except AttributeError:
             return None
 
     def get_slit_gaps(self):
@@ -1415,7 +1417,7 @@ class BIOMAXCollect(DataCollect):
         """
         try:
             flux = self.flux_hwobj.get_flux()
-        except Exception as ex:
+        except Exception:
             logging.getLogger("HWR").error("[HWR] Cannot retrieve flux value")
             flux = -1
         return flux
@@ -1430,7 +1432,7 @@ class BIOMAXCollect(DataCollect):
         try:
             ori_motors, ori_phase = self.diffractometer_hwobj.set_calculate_flux_phase()
             flux = self.flux_hwobj.get_instant_flux()
-        except Exception as ex:
+        except Exception:
             logging.getLogger("HWR").error(
                 "[COLLECT] Cannot get the current flux value"
             )
