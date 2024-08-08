@@ -1,12 +1,16 @@
 from enum import Enum
+
 import gevent
-from mxcubecore.HardwareObjects.abstract.AbstractNState import AbstractNState
-from mxcubecore.HardwareObjects.abstract.AbstractNState import BaseValueEnum
+
+from mxcubecore.HardwareObjects.abstract.AbstractNState import (
+    AbstractNState,
+    BaseValueEnum,
+)
 from mxcubecore.HardwareObjects.ExporterNState import ExporterNState
 
 
-class MICROMAXZoom(ExporterNState):
-    """BIOMAXMicrodiffZoom class"""
+class MD3Zoom(ExporterNState):
+    """BIOMAX and MICROMAX MicrodiffZoom class"""
 
     def __init__(self, name):
         super().__init__(name)
