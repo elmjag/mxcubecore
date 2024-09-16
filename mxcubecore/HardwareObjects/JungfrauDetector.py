@@ -50,16 +50,9 @@ class JungfrauDetector(AbstractDetector):
 
     # pixel size in millimeters (75 µm)
     PIXEL_SIZE = 0.075
-    FILE_SUFFIX = "h5"
 
     def __init__(self, *args):
         super().__init__(*args)
-
-        # set default values for some properties
-        self.set_property("model", "JUNGFRAU")
-        self.set_property("type", "charge integrating dynamic gain switching device")
-        self.set_property("manufacturer", "PSI")
-        self.set_property("file_suffix", self.FILE_SUFFIX)
 
         self.col_config = {
             "OmegaStart": None,
