@@ -18,6 +18,8 @@ try:
 except ImportError:
     raise Exception("Cannot import SDM library.")
 
+log = logging.getLogger("HWR")
+
 
 class MaxIVSession(Session):
     def init(self):
@@ -92,7 +94,7 @@ class MaxIVSession(Session):
                 time.strftime("%Y%m%d"),
             )
 
-        logging.getLogger("HWR").info(
+        log.info(
             "[MAX IV Session] Data directory for proposal %s: %s"
             % (self.get_proposal(), directory)
         )
@@ -100,7 +102,7 @@ class MaxIVSession(Session):
         return directory
 
     def prepare_directories(self, proposal_info):
-        logging.getLogger("HWR").info(
+        log.info(
             "[MAX IV Session] Preparing Data directory for proposal %s" % proposal_info
         )
         start_time = proposal_info.get("Session")[0].get("startDate")
@@ -116,7 +118,7 @@ class MaxIVSession(Session):
         # e.g. /data/visitors/biomax
         _proposal = self.get_proposal()
 
-        logging.getLogger("HWR").info(
+        log.info(
             "[MAX IV Session] Preparing Data directory for proposal %s" % _proposal
         )
         if self.is_commissioning:
@@ -142,13 +144,11 @@ class MaxIVSession(Session):
                 self.proposal_number, group, self.get_session_start_date()
             )
 
-            logging.getLogger("HWR").info(
-                "[MAX IV Session] SDM Data directory created: %s" % _raw_path
-            )
+            log.info("[MAX IV Session] SDM Data directory created: %s" % _raw_path)
         except Exception as ex:
             msg = "[MAX IV Session] SDM Data directory creation failed. %s" % ex
-            logging.getLogger("HWR").warning(msg)
-            logging.getLogger("HWR").info(
+            log.warning(msg)
+            log.info(
                 "[MAX IV Session] SDM Data directory trying to create again after failure"
             )
             time.sleep(0.1)
@@ -157,19 +157,17 @@ class MaxIVSession(Session):
                     self.proposal_number, group, self.get_session_start_date()
                 )
 
-                logging.getLogger("HWR").info(
-                    "[MAX IV Session] SDM Data directory created: %s" % _raw_path
-                )
+                log.info("[MAX IV Session] SDM Data directory created: %s" % _raw_path)
             except Exception as ex:
                 msg = "[MAX IV Session] SDM Data directory creation failed. %s" % ex
-                logging.getLogger("HWR").error(msg)
+                log.error(msg)
                 raise Exception(msg)
 
         if self.base_archive_directory:
             archive_folder = "{}/{}".format(category, self.beamline_name.lower())
             PathTemplate.set_archive_path(self.base_archive_directory, archive_folder)
             _archive_path = os.path.join(self.base_archive_directory, archive_folder)
-            logging.getLogger("HWR").info(
+            log.info(
                 "[MAX IV Session] Archive directory configured: %s" % _archive_path
             )
 
