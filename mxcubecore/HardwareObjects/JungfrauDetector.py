@@ -51,8 +51,8 @@ class JungfrauDetector(AbstractDetector):
     # pixel size in millimeters (75 µm)
     PIXEL_SIZE = 0.075
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, name):
+        super().__init__(name)
 
         self.col_config = {
             "OmegaStart": None,
