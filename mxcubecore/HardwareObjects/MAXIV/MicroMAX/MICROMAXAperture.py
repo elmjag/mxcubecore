@@ -12,8 +12,8 @@ class MICROMAXAperture(AbstractActuator):
 
     POSITIONS = ("BEAM", "OFF", "PARK")
 
-    def __init__(self, *args):
-        AbstractActuator.__init__(self, *args)
+    def __init__(self, name):
+        AbstractActuator.__init__(self, name)
 
     def init(self):
 
