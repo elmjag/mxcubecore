@@ -48,8 +48,8 @@ class HardwareObjectState(Enum):
 
 
 class MICROMAXBeamInfo(BeamInfo.BeamInfo, AbstractBeam.AbstractBeam):
-    def __init__(self, *args):
-        BeamInfo.BeamInfo.__init__(self, *args)
+    def __init__(self, name):
+        BeamInfo.BeamInfo.__init__(self, name)
         self.beam_position = (0, 0)
         self._beam_width = None
         self._beam_height = None
