@@ -21,8 +21,8 @@ class MAXIVISPyBRestClient(ISPyBRestClient):
     MAX IV uses different url for ispyb root and exi
     """
 
-    def __init__(self, *args):
-        ISPyBRestClient.__init__(self, *args)
+    def __init__(self, name):
+        ISPyBRestClient.__init__(self, name)
 
     def init(self):
         ISPyBRestClient.init(self)

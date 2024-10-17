@@ -25,8 +25,8 @@ class MAXIVISPyBClient(ISPyBClient):
     Web-service client for ISPyB. MAX IV modifications for getting the main proposer from our DUO
     """
 
-    def __init__(self, *args):
-        ISPyBClient.__init__(self, *args)
+    def __init__(self, name):
+        ISPyBClient.__init__(self, name)
 
     def init(self):
         ISPyBClient.init(self)
