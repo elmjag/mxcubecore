@@ -67,12 +67,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.fluodet = self.get_object_by_role("fluodet")
         self.rex = self.get_object_by_role("rex")
 
-        self.centring_hwobj = self.get_object_by_role("centring")
-        if self.centring_hwobj is None:
-            logging.getLogger("HWR").debug(
-                "MAXIVMinidiff: Centring math is not defined"
-            )
-
         try:
             self.beamstop_z = self.get_object_by_role("beamstop_z")
         except:
@@ -397,11 +391,11 @@ class MAXIVMD3(GenericDiffractometer):
         """
         self.update_zoom_calibration()
 
-        self.centring_hwobj.initCentringProcedure()
+        HWR.beamline.centring.initCentringProcedure()
         for click in range(3):
             self.user_clicked_event = gevent.event.AsyncResult()
             x, y = self.user_clicked_event.get()
-            self.centring_hwobj.appendCentringDataPoint(
+            HWR.beamline.centring.appendCentringDataPoint(
                 {
                     "X": (x - self.beam_position[0]) / self.pixels_per_mm_x,
                     "Y": (y - self.beam_position[1]) / self.pixels_per_mm_y,
@@ -417,7 +411,7 @@ class MAXIVMD3(GenericDiffractometer):
                 if click < 2:
                     self.phi_motor_hwobj.set_value_relative(90)
         self.omega_reference_add_constraint()
-        cpos = self.centring_hwobj.centeredPosition(return_by_name=False)
+        cpos = HWR.beamline.centring.centeredPosition(return_by_name=False)
         return cpos
 
     def automatic_centring(self):
@@ -453,7 +447,7 @@ class MAXIVMD3(GenericDiffractometer):
         for k in range(cycle):
             self.emit_progress_message("Doing automatic centring")
             surface_score_list = []
-            self.centring_hwobj.initCentringProcedure()
+            HWR.beamline.centring.initCentringProcedure()
             for a in range(3):
                 x, y, score = self.find_loop()
                 if x < 0 or y < 0:
@@ -467,7 +461,7 @@ class MAXIVMD3(GenericDiffractometer):
                         if y >= 0:
                             if x < self.image_width / 2:
                                 x = 0
-                                self.centring_hwobj.appendCentringDataPoint(
+                                HWR.beamline.centring.appendCentringDataPoint(
                                     {
                                         "X": (x - self.beam_position[0])
                                         / self.pixels_per_mm_x,
@@ -478,7 +472,7 @@ class MAXIVMD3(GenericDiffractometer):
                                 break
                             else:
                                 x = self.image_width
-                                self.centring_hwobj.appendCentringDataPoint(
+                                HWR.beamline.centring.appendCentringDataPoint(
                                     {
                                         "X": (x - self.beam_position[0])
                                         / self.pixels_per_mm_x,
@@ -492,7 +486,7 @@ class MAXIVMD3(GenericDiffractometer):
                     self.phi_motor_hwobj.set_value_relative(-i * 15)
                     self.wait_ready(time_out)
                 else:
-                    self.centring_hwobj.appendCentringDataPoint(
+                    HWR.beamline.centring.appendCentringDataPoint(
                         {
                             "X": (x - self.beam_position[0]) / self.pixels_per_mm_x,
                             "Y": (y - self.beam_position[1]) / self.pixels_per_mm_y,
@@ -502,7 +496,7 @@ class MAXIVMD3(GenericDiffractometer):
                 self.wait_ready(time_out)
 
             self.omega_reference_add_constraint()
-            centred_pos = self.centring_hwobj.centeredPosition(return_by_name=False)
+            centred_pos = HWR.beamline.centring.centeredPosition(return_by_name=False)
             if k < 2:
                 self.move_to_centred_position(centred_pos)
                 self.wait_ready(time_out)
@@ -530,7 +524,7 @@ class MAXIVMD3(GenericDiffractometer):
             ] / self.pixels_per_mm_y + self.omega_reference_par[
                 "position"
             ]
-        self.centring_hwobj.appendMotorConstraint(self.omega_reference_motor, on_beam)
+        HWR.beamline.centring.appendMotorConstraint(self.omega_reference_motor, on_beam)
 
     def omega_reference_motor_moved(self, pos):
         """
@@ -602,7 +596,7 @@ class MAXIVMD3(GenericDiffractometer):
         Descript. :
         """
         c = centred_positions_dict
-        xy = self.centring_hwobj.centringToScreen(c)
+        xy = HWR.beamline.centring.centringToScreen(c)
         x = xy["X"] * self.pixels_per_mm_x + self.zoom_centre["x"]
         y = xy["Y"] * self.pixels_per_mm_y + self.zoom_centre["y"]
         return x, y
@@ -890,15 +884,15 @@ class MAXIVMD3(GenericDiffractometer):
         Descript. :
         """
         self.update_zoom_calibration()
-        self.centring_hwobj.initCentringProcedure()
-        self.centring_hwobj.appendCentringDataPoint(
+        HWR.beamline.centring.initCentringProcedure()
+        HWR.beamline.centring.appendCentringDataPoint(
             {
                 "X": (x - self.beam_position[0]) / self.pixels_per_mm_x,
                 "Y": (y - self.beam_position[1]) / self.pixels_per_mm_y,
             }
         )
         self.omega_reference_add_constraint()
-        pos = self.centring_hwobj.centeredPosition()
+        pos = HWR.beamline.centring.centeredPosition()
         if return_by_names:
             pos = self.convert_from_obj_to_name(pos)
         pos.pop("zoom", None)
