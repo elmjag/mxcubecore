@@ -17,8 +17,8 @@ log = logging.getLogger("HWR")
 
 
 class MICROMAXMD3Injector(MICROMAXMD3):
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, name):
+        super().__init__(name)
         self.phase_pos_dict = {}
         self.phases = {}
 

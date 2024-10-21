@@ -16,11 +16,8 @@ DEFAULT_PHASE_TIMEOUT = 20
 
 
 class MICROMAXMD3(MAXIVMD3):
-    def __init__(self, *args):
-        """
-        Description:
-        """
-        super().__init__(*args)
+    def __init__(self, name):
+        super().__init__(name)
 
     def init(self):
 
