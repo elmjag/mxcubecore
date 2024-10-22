@@ -84,13 +84,13 @@ class MICROMAXCollect(DataCollect):
 
         self.diffractometer_hwobj = bl.diffractometer
 
-        self.lims_client_hwobj = self.get_object_by_role("dbserver")
+        self.lims_client_hwobj = bl.lims
         self.machine_info_hwobj = self.get_object_by_role("mach_info")
         self.energy_hwobj = bl.energy
         self.resolution_hwobj = bl.resolution
         self.detector_hwobj = bl.detector
         self.flux_hwobj = self.get_object_by_role("flux")
-        self.autoprocessing_hwobj = self.get_object_by_role("auto_processing")
+        self.autoprocessing_hwobj = bl.offline_processing
         # self.autoprocessing_hwobj.lims_client_hwobj = self.lims_client_hwobj
         self.autoprocessing_hwobj.NIMAGES_TRIGGER_AUTO_PROC = (
             self.NIMAGES_TRIGGER_AUTO_PROC
@@ -99,9 +99,9 @@ class MICROMAXCollect(DataCollect):
         self.transmission_hwobj = bl.transmission
         # self.sample_changer_hwobj = self.getObjectByRole("sample_changer")
         # self.sample_changer_maint_hwobj = self.getObjectByRole("sample_changer_maintenance")
-        self.dtox_hwobj = self.detector_hwobj.get_object_by_role("detector_distance")
+        self.dtox_hwobj = bl.detector.detector_distance
         self.detector_cover_hwobj = self.detector_hwobj.get_object_by_role("cover")
-        self.session_hwobj = self.get_object_by_role("session")
+        self.session_hwobj = bl.session
         self.shape_history_hwobj = HWR.beamline.sample_view
         self.dozor_hwobj = self.get_object_by_role("dozor")
         self.scicat_enabled = self.get_property("scicat_enabled", False)
