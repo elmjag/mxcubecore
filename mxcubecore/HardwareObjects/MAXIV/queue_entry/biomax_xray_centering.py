@@ -19,7 +19,7 @@ import json
 import os
 
 import gevent
-from pydantic import (
+from pydantic.v1 import (
     BaseModel,
     Field,
 )

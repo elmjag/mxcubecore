@@ -1,7 +1,7 @@
 import json
 import logging
 
-from pydantic import (
+from pydantic.v1 import (
     BaseModel,
     Field,
 )
