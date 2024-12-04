@@ -39,6 +39,7 @@ class InjectorUserCollectionParameters(BaseModel):
     total_images: int = Field(10000, gt=0, lt=10000000, title="Total number of images")
     energy: float = Field()
     resolution: float = Field()
+    space_group: str = Field()
     cellA: float = Field(0, title="Cell A")
     cellB: float = Field(0, title="Cell B")
     cellC: float = Field(0, title="Cell C")
@@ -72,6 +73,7 @@ class InjectorTaskParameters(BaseModel):
                     "exp_time",
                     "resolution",
                     "energy",
+                    "space_group",
                     "cellAlpha",
                     "cellA",
                     "cellBeta",
