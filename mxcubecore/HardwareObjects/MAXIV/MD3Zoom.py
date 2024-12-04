@@ -1,11 +1,6 @@
 from enum import Enum
 
-import gevent
-
-from mxcubecore.HardwareObjects.abstract.AbstractNState import (
-    AbstractNState,
-    BaseValueEnum,
-)
+from mxcubecore.HardwareObjects.abstract.AbstractNState import BaseValueEnum
 from mxcubecore.HardwareObjects.ExporterNState import ExporterNState
 
 
@@ -27,13 +22,6 @@ class MD3Zoom(ExporterNState):
     def set_limits(self, limits=(None, None)):
         """Overrriden from AbstractActuator"""
         self._nominal_limits = limits
-
-    def update_value(self, value=None):
-        """Check if the value has changed. Emits signal valueChanged.
-        Args:
-            value: value
-        """
-        super().update_value()
 
     def update_limits(self, limits=None):
         """Overrriden from AbstractNState"""
