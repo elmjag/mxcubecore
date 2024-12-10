@@ -2,7 +2,7 @@ import logging
 
 from mxcubecore import HardwareRepository as HWR
 
-log = logging.getLogger("HWR")
+log = logging.getLogger("user_level_log")
 
 
 class PrepareOpenHutch:
