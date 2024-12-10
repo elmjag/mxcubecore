@@ -52,7 +52,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         queue_model = HWR.beamline.queue_model
         path_template.run_number = queue_model.get_next_run_number(path_template)
 
-    def prepare_data_collection(self, num_images, num_triggers):
+    def prepare_data_collection(self, num_images, num_triggers, software_trigger=False):
         """
         Prepare beamline for a SSX data collection, i.e.:
 
@@ -159,6 +159,10 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
             det_cfg["UnitCellAlpha"] = cell_alpha
             det_cfg["UnitCellBeta"] = cell_beta
             det_cfg["UnitCellGamma"] = cell_gamma
+        else:
+            # Eiger's trigger mode must be explicitly configured each time
+            trigger_mode = "ints" if software_trigger else "exts"
+            det_cfg["TriggerMode"] = trigger_mode
 
         detector.prepare_acquisition(det_cfg)
         detector.wait_config_done()
