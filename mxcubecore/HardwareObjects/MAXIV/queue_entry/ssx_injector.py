@@ -19,6 +19,7 @@ from .base import (
     AbstractSsxQueueEntry,
     SsxCollectionParameters,
     restore_beamline,
+    wait_acquisition_done,
 )
 
 log = logging.getLogger("queue_exec")
@@ -78,25 +79,6 @@ class InjectorTaskParameters(BaseModel):
         )
 
 
-def _wait_acquisition_done():
-    """
-    wait unit detector reports that data acquisition have stopped
-    """
-    detector = HWR.beamline.detector
-
-    log.info("Waiting for acquisition to finish.")
-
-    #
-    # deal with different behaviour of Jungfrau vs Eiger hardware objects
-    #
-    if HWR.beamline.collect.is_jungfrau():
-        detector.wait_ready()
-    else:
-        # we are using eiger detector
-        detector.wait_idle()
-    log.info("Acquisition is finished.")
-
-
 class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
     QMO = SsxInjectorQueueModel
     DATA_MODEL = InjectorTaskParameters
@@ -118,7 +100,7 @@ class SsxInjectorQueueEntry(AbstractSsxQueueEntry):
         if shape and shape.t == "L":
             self.interpolate_positions(shape)
 
-        _wait_acquisition_done()
+        wait_acquisition_done()
 
     def execute(self):
         try:
