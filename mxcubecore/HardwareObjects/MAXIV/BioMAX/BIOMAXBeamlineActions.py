@@ -3,10 +3,7 @@ import logging
 import gevent
 
 from mxcubecore import HardwareRepository as HWR
-from mxcubecore.BaseHardwareObjects import HardwareObject
-from mxcubecore.CommandContainer import CommandObject
 from mxcubecore.HardwareObjects.BeamlineActions import AnnotatedCommand
-from mxcubecore.TaskUtils import task
 
 DET_SAFE_POSITION = 900  # mm
 
