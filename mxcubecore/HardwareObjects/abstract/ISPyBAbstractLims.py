@@ -9,8 +9,10 @@ import gevent
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.HardwareObjects.abstract.AbstractLims import AbstractLims
 from mxcubecore.HardwareObjects.abstract.ISPyBDataAdapter import ISPyBDataAdapter
-from mxcubecore.model.lims_session import LimsSessionManager
-from mxcubecore.model.lims_session import Lims
+from mxcubecore.model.lims_session import (
+    Lims,
+    LimsSessionManager,
+)
 
 
 class ISPyBAbstractLIMS(AbstractLims):
@@ -59,13 +61,7 @@ class ISPyBAbstractLIMS(AbstractLims):
         except AttributeError:
             pass
 
-        self.adapter = ISPyBDataAdapter(
-            self.ws_root.strip(),
-            self.proxy,
-            self.ws_username,
-            self.ws_password,
-            self.beamline_name,
-        )
+        self.adapter = self._create_data_adapter()
         logging.getLogger("HWR").debug("[ISPYB] Proxy address: %s" % self.proxy)
 
         # Add the porposal codes defined in the configuration xml file
@@ -86,6 +82,15 @@ class ISPyBAbstractLIMS(AbstractLims):
                     self._translations[code]["gui"] = proposal.gui
                 except AttributeError:
                     pass
+
+    def _create_data_adapter(self) -> ISPyBDataAdapter:
+        return ISPyBDataAdapter(
+            self.ws_root.strip(),
+            self.proxy,
+            self.ws_username,
+            self.ws_password,
+            self.beamline_name,
+        )
 
     def get_lims_name(self) -> List[Lims]:
         return [
