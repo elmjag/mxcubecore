@@ -87,7 +87,6 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
                 beamline.detector,
                 beamline.collect,
                 beamline.diffractometer,
-                beamline.session,
             )
 
         #
@@ -109,7 +108,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
             run_number,
         ) = get_params()
 
-        detector, collect, diffractometer, session = get_hwobjs()
+        detector, collect, diffractometer = get_hwobjs()
 
         #
         # open safety shutter
@@ -153,7 +152,7 @@ class AbstractSsxQueueEntry(BaseQueueEntry):
         # create CrystFEL input files
         #
         dc_params = queue_model_objects.to_collect_dict(
-            self._data_model, session, self._data_model.get_sample_node()
+            self._data_model, self._data_model.get_sample_node()
         )
         collect.current_dc_parameters = dc_params[0]
 
