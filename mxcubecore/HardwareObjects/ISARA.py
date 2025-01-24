@@ -44,12 +44,6 @@ NUMBER_OF_PUCKS = 29
 NUMBER_OF_SAMPLES = 16
 
 
-def cats_basket_presence_void(value, basket=1):
-    logging.getLogger("HWR").warning(
-        "Basket %s presence changed void. %s" % (basket, value)
-    )
-
-
 class _AttrConnectionError(Exception):
     def __init__(self, attribute_name: str):
         super().__init__()
