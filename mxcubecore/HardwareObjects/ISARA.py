@@ -1,5 +1,5 @@
 """
-CATS sample changer hardware object.
+ISARA sample changer hardware object.
 
 Implements the abstract interface of the AbstractSampleChanger for the CATS
 and ISARA sample changer model.
@@ -322,7 +322,7 @@ class ISARA(SampleChanger):
         :returns: None
         :rtype: None
         """
-        logging.getLogger("HWR").warning("Cats90:  initializing contents")
+        logging.getLogger("HWR").info("ISARA: initializing contents")
 
         self.basket_presence = [None] * NUMBER_OF_PUCKS
 
@@ -356,7 +356,7 @@ class ISARA(SampleChanger):
             sample._set_loaded(loaded, _has_been_loaded)
             sample._set_holder_length(spl[4])
         self._do_update_cats_contents()
-        logging.getLogger("HWR").warning("Cats90:  initializing contents done")
+        logging.getLogger("HWR").info("ISARA: initializing contents done")
 
     def get_sample_properties(self):
         """
@@ -1028,7 +1028,7 @@ class ISARA(SampleChanger):
         old_sample = self.get_loaded_sample()
 
         logging.getLogger("HWR").debug(
-            "----- Cats90 -----.  Sample has changed. Dealing with it - new_sample = %s / old_sample = %s"
+            "ISARA: Sample has changed. Dealing with it - new_sample = %s / old_sample = %s"
             % (new_sample, old_sample)
         )
 
