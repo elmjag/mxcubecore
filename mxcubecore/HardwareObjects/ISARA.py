@@ -21,7 +21,10 @@ import logging
 import time
 
 import gevent
-import PyTango
+from tango import (
+    DeviceProxy,
+    DevState,
+)
 
 from mxcubecore.Command.Tango import TangoChannel
 from mxcubecore.HardwareObjects.abstract.AbstractSampleChanger import (
@@ -146,14 +149,14 @@ class ISARA(SampleChanger):
         self.cats_powered = False
         self.cats_status = ""
         self.cats_running = False
-        self.cats_state = PyTango.DevState.UNKNOWN
+        self.cats_state = DevState.UNKNOWN
         self.cats_lids_closed = False
         self.cats_model = "ISARA"
 
         # declare channels to detect basket presence changes
         self.basket_channels = None
 
-        self.cats_device = PyTango.DeviceProxy(self.get_property("tangoname"))
+        self.cats_device = DeviceProxy(self.get_property("tangoname"))
 
         no_of_lids = self.get_property("no_of_lids")
         if no_of_lids is None:
@@ -679,7 +682,7 @@ class ISARA(SampleChanger):
             # hack for transient states
             trials = 0
 
-            while value in [PyTango.DevState.ALARM, PyTango.DevState.ON]:
+            while value in [DevState.ALARM, DevState.ON]:
                 time.sleep(0.1)
                 trials += 1
                 logging.getLogger("HWR").warning(
@@ -883,7 +886,7 @@ class ISARA(SampleChanger):
 
         # hack for transient states
         trials = 0
-        while _state in [PyTango.DevState.ALARM, PyTango.DevState.ON]:
+        while _state in [DevState.ALARM, DevState.ON]:
             time.sleep(0.1)
             trials += 1
             logging.getLogger("HWR").warning(
@@ -899,13 +902,13 @@ class ISARA(SampleChanger):
 
     def _decide_state(self, dev_state, powered, has_loaded, on_diff):
 
-        if dev_state == PyTango.DevState.ALARM:
+        if dev_state == DevState.ALARM:
             _state = SampleChangerState.Alarm
-        elif dev_state == PyTango.DevState.FAULT:
+        elif dev_state == DevState.FAULT:
             _state = SampleChangerState.Fault
         elif not powered:
             _state = SampleChangerState.Disabled
-        elif dev_state == PyTango.DevState.RUNNING:
+        elif dev_state == DevState.RUNNING:
             if self.state not in [
                 SampleChangerState.Loading,
                 SampleChangerState.Unloading,
@@ -913,7 +916,7 @@ class ISARA(SampleChanger):
                 _state = SampleChangerState.Moving
             else:
                 _state = self.state
-        elif dev_state == PyTango.DevState.UNKNOWN:
+        elif dev_state == DevState.UNKNOWN:
             _state = SampleChangerState.Unknown
         elif has_loaded ^ on_diff:
             # go to Unknown state if a sample is detected on the gonio but not registered in the internal database
@@ -925,7 +928,7 @@ class ISARA(SampleChanger):
             _state = SampleChangerState.Unknown
         # elif not lids_closed:
         # _state = SampleChangerState.Charging
-        elif dev_state == PyTango.DevState.ON:
+        elif dev_state == DevState.ON:
             _state = SampleChangerState.Ready
         else:
             _state = SampleChangerState.Unknown
