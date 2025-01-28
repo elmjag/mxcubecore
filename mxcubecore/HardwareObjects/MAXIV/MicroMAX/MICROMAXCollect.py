@@ -1124,6 +1124,7 @@ class MICROMAXCollect(DataCollect):
                     self.user_log.error("Cannot move detector.")
                     self.log.exception("Problems when moving detector!!")
                     self.stop_collect()
+                    self.emit_collection_failed()
         else:
             self.log.exception("Can't get distance limits, not moving detector!!")
         self.log.info(
