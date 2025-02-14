@@ -187,4 +187,5 @@ class MaxIVSession(Session):
         self.session_id = None
         self.proposal_code = None
         self.proposal_number = None
+        self.proposal_id = None
         self.is_commissioning = False
