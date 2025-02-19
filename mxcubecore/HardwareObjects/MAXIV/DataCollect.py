@@ -131,19 +131,6 @@ class DataCollect(AbstractCollect, HardwareObject):
             raise
 
     def close_fast_shutter(self):
-        #
-        # The MD3UP's fast shutter can't be closed if it is still moving
-        # towards 'open' position.
-        #
-        # If a 'close fast shutter' command is issued to fast after 'open'
-        # command, MD3UP will go into a fault state. The fault state which
-        # requires power cycling MD3UP to get out of.
-        #
-        # As we don't have any idea when the last 'open' command was issued,
-        # wait 3 milliseconds before sending 'close' command. Hopefully,
-        # this is enough time for the shutter to reach the open position.
-        #
-        gevent.sleep(ms_to_sec(3))
         self.diffractometer_hwobj.close_fast_shutter()
 
     def get_mxcube_server_ip(self):
