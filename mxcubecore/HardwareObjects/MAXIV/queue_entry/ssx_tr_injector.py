@@ -151,11 +151,8 @@ class SsxTrInjectorQueueEntry(AbstractSsxQueueEntry):
             restore_beamline()
 
     def stop(self):
-        # stop generating trigger signals
-        self.ekspla_laser.stop()
-
-        # give detector chance to finish last train of triggers
-        gevent.sleep(1.0)
-
         # this will ask detector to stop acquisition
         super().stop()
+
+        # stop generating trigger signals
+        self.ekspla_laser.stop()
