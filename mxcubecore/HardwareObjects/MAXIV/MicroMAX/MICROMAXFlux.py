@@ -117,12 +117,9 @@ class MICROMAXFlux(AbstractFlux):
         return full_flux
 
     def calc_flux(self):
-        """
-        det can be "jungfrau" or "eiger"
-        """
         energy_ev = self.energy_hwobj.get_current_energy() * 1000.0
         tmp = self.detector_hwobj.get_property("model")
-        det = tmp.lower()
+        det = tmp.lower()  # det can be "jungfrau" or "eiger"
         det_dist = self.det_mot[det].Position
         current = self.diode[det].InstantCurrent
         flux = self._calc_flux(energy_ev, det_dist, current)
