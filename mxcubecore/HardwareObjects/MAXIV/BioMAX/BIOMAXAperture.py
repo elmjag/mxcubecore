@@ -8,7 +8,7 @@ from mxcubecore.HardwareObjects.abstract.AbstractActuator import AbstractActuato
 
 
 class BIOMAXAperture(AbstractActuator):
-    """Aperture calss to change the diameter and emmiting messages"""
+    """Aperture class to change the diameter and emitting messages."""
 
     POSITIONS = ("BEAM", "OFF", "PARK")
 
