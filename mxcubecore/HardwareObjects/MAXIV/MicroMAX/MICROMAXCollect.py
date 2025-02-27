@@ -32,9 +32,7 @@ DET_SAFE_POSITION = 500
 
 
 class MICROMAXCollect(DataCollect):
-    """
-    Descript: Data collection class, inherited from AbstractCollect
-    """
+    """MicroMAX specific data collection hardware object."""
 
     # min images to trigger auto processing
     NIMAGES_TRIGGER_AUTO_PROC = 20
@@ -448,9 +446,8 @@ class MICROMAXCollect(DataCollect):
         return triggers_to_collect
 
     def data_collection_hook(self):
-        """
-        Descript. : main collection command
-        """
+        """Main collection command."""
+
         try:
             self._collecting = True
             oscillation_parameters = self.current_dc_parameters["oscillation_sequence"][
@@ -969,9 +966,8 @@ class MICROMAXCollect(DataCollect):
         self.diffractometer_hwobj.camera.take_snapshot(filename)
 
     def set_detector_roi(self, value):
-        """
-        Descript. : set the detector roi mode
-        """
+        """Set the detector ROI mode."""
+
         self.detector_hwobj.set_roi_mode(value)
 
     def set_helical(self, helical_on):
@@ -1002,9 +998,7 @@ class MICROMAXCollect(DataCollect):
 
     @task
     def move_motors(self, motor_position_dict):
-        """
-        Descript. :
-        """
+        """Move diffractometer motors."""
         self.diffractometer_hwobj.move_to_motors_positions(motor_position_dict)
 
     def create_file_directories(self):
@@ -1107,9 +1101,8 @@ class MICROMAXCollect(DataCollect):
         pandabox.load_osc_schema(cfg)
 
     def move_detector(self, value):
-        """
-        Descript. : move detector to the set distance
-        """
+        """Move detector to the specified distance."""
+
         self._power_on_dtox()
         lower_limit, upper_limit = self.get_detector_distance_limits()
         self.log.info(
@@ -1143,16 +1136,13 @@ class MICROMAXCollect(DataCollect):
             self.stop_collect()
 
     def get_detector_distance(self):
-        """
-        Descript. :
-        """
+        """Get current detector distance."""
         if self.dtox_hwobj is not None:
             return self.dtox_hwobj.get_value()
 
     def get_detector_distance_limits(self):
-        """
-        Descript. :
-        """
+        """Get min and max allowed detector distances."""
+
         if self.dtox_hwobj is not None:
             return self.dtox_hwobj.get_limits()
 
@@ -1341,9 +1331,9 @@ class MICROMAXCollect(DataCollect):
         return flux
 
     def get_instant_flux(self, keep_position=True):
-        """
-        Descript. : get the instant flux value, w/o checking beamstability
-        this method assuming that the MD3 is already in datacollection phase
+        """Get the instant flux value, w/o checking beams stability.
+
+        This method assumes that the MD3 is already in data collection phase.
         """
         try:
             self.close_detector_cover()
@@ -1367,9 +1357,7 @@ class MICROMAXCollect(DataCollect):
         return flux
 
     def get_estimated_flux(self):
-        """
-        Descript. : Read the flux from BCU, no attenuation, no collimator
-        """
+        """Read the flux from BCU, no attenuation, no collimator."""
 
         flux = 0
         try:
@@ -1385,9 +1373,8 @@ class MICROMAXCollect(DataCollect):
         self.move_detector(DET_SAFE_POSITION)
 
     def prepare_for_new_sample(self, manual_mode=True):
-        """
-        Descript.: prepare beamline for a new sample,
-        """
+        """Prepare beamline for a new sample."""
+
         self.log.info("[HWR] Preparing beamline for a new sample.")
 
         self.close_detector_cover()

@@ -515,9 +515,8 @@ class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
         logging.getLogger("user_level_log").info("XRF spectrum finished")
 
     def closure(self):
-        """
-        Descript. :close things down and open the colibri shutter
-        """
+        """Close things down and open the colibri shutter."""
+
         self.diffractometer_hwobj.wait_device_ready()
         logging.getLogger("HWR").info("Closing fast shutter")
         self.diffractometer_hwobj.close_fast_shutter()

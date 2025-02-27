@@ -484,9 +484,8 @@ class MAXIVAutoProcessing(HardwareObject):
         return output_file
 
     def generate_crystfel_input_files(self, det_config, sample_ref, proc_dir, auto_dir):
-        """
-        Descript. : generate input files to run crystfel for SSX experiment
-        """
+        """Generate input files to run crystfel for SSX experiment."""
+
         geom_dict = {
             "energy_ev": det_config["PhotonEnergy"],
             "det_dist": det_config["DetectorDistance"],

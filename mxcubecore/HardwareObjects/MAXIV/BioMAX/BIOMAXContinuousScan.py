@@ -153,9 +153,8 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         HWR.beamline.diffractometer.move_fluo_in()
 
     def prepare_detector(self, emission):
-        """
-        Preparing Xspress3mini detector
-        """
+        """Prepare Xspress3mini detector."""
+
         self.xspress3.Init()
         self.xspress3.Window1_Ch0 = [int(emission / 10) - 15, int(emission / 10) + 15]
         # To be triggered by panda
@@ -224,9 +223,8 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
                     gevent.sleep(0.2)
 
     def prepare_panda(self, trig_time):
-        """
-        preparing the pandabox for triggering the shutter and detector
-        """
+        """Prepare the pandabox for triggering the shutter and detector."""
+
         # trigger based on bragg positions
         self.pandabox.TriggerDomain = "POSITION"
         self.pandabox.EncInUse = True
@@ -638,9 +636,10 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         return energies
 
     def get_scan_data(self):
-        """
-        Descript. : returns energy scan data.
-                    List contains tuples of (energy, counts)
+        """Get energy scan data.
+
+        Returns:
+            List containing tuples of (energy, counts).
         """
         return self.scan_data
 

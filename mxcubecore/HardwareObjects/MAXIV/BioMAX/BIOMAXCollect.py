@@ -26,9 +26,7 @@ DET_SAFE_POSITION = 800
 
 
 class BIOMAXCollect(DataCollect):
-    """
-    Descript: Data collection class, inherited from AbstractCollect
-    """
+    """BioMAX specific data collection hardware object."""
 
     # min images to trigger auto processing
     NIMAGES_TRIGGER_AUTO_PROC = 20
@@ -465,9 +463,7 @@ class BIOMAXCollect(DataCollect):
         return triggers_to_collect
 
     def data_collection_hook(self):
-        """
-        Descript. : main collection command
-        """
+        """Main collection command."""
 
         try:
             self._collecting = True
@@ -969,9 +965,7 @@ class BIOMAXCollect(DataCollect):
         self.diffractometer_hwobj.camera_hwobj.takeSnapshot(filename)
 
     def set_detector_roi(self, value):
-        """
-        Descript. : set the detector roi mode
-        """
+        """Set the detector roi mode."""
         self.detector_hwobj.set_roi_mode(value)
 
     def set_helical(self, helical_on):
@@ -1059,9 +1053,8 @@ class BIOMAXCollect(DataCollect):
         return xds_directory, auto_directory
 
     def move_detector(self, value):
-        """
-        Descript. : move detector to the set distance
-        """
+        """Move detector to the specified distance."""
+
         lower_limit, upper_limit = self.get_detector_distance_limits()
         logging.getLogger("HWR").info(
             "...................value %s, detector movement start..... %s"
@@ -1105,9 +1098,8 @@ class BIOMAXCollect(DataCollect):
             self.stop_collect()
 
     def get_detector_distance(self):
-        """
-        Descript. :
-        """
+        """Get current detector distance."""
+
         if self.dtox_hwobj is not None:
             return self.dtox_hwobj.get_value()
 
@@ -1279,9 +1271,9 @@ class BIOMAXCollect(DataCollect):
         return flux
 
     def get_instant_flux(self, keep_position=True):
-        """
-        Descript. : get the instant flux value, w/o checking beamstability
-        this method assuming that the MD3 is already in datacollection phase
+        """Get the instant flux value, w/o checking beams stability.
+
+        This method assumes that the MD3 is already in data collection phase.
         """
         # disable it temporarily until the EM works properly
 
@@ -1308,9 +1300,8 @@ class BIOMAXCollect(DataCollect):
         return float(self.get_flux())
 
     def prepare_for_new_sample(self, manual_mode=True):
-        """
-        Descript.: prepare beamline for a new sample,
-        """
+        """Prepare beamline for a new sample."""
+
         if self.diffractometer_hwobj.in_plate_mode():
             logging.getLogger("HWR").info(
                 "[HWR] Preparing beamline for a new sample ignored as we are in PLATE mode."
@@ -1326,9 +1317,8 @@ class BIOMAXCollect(DataCollect):
         self.move_detector(DET_SAFE_POSITION)
 
     def prepare_set_energy(self):
-        """
-        Descript.: figure out if we should check the beam after the energy changes
-        """
+        """Figure out if we should check the beam after the energy changes."""
+
         checkbeam = True
         try:
             if float(self.get_machine_current()) < 10.0:
