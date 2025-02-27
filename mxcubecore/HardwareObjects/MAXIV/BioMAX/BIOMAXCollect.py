@@ -34,9 +34,6 @@ class BIOMAXCollect(DataCollect):
     NIMAGES_TRIGGER_AUTO_PROC = 20
 
     def __init__(self, name):
-        """
-        Descript. :
-        """
         AbstractCollect.__init__(self, name)
         HardwareObject.__init__(self, name)
 
@@ -69,9 +66,6 @@ class BIOMAXCollect(DataCollect):
         self.flux_after_collect = None
 
     def init(self):
-        """
-        Descript. :
-        """
         self.ready_event = gevent.event.Event()
         self.diffractometer_hwobj = HWR.beamline.diffractometer
         self.lims_client_hwobj = HWR.beamline.lims
@@ -652,9 +646,6 @@ class BIOMAXCollect(DataCollect):
             step_count += 1
 
     def emit_collection_failed(self):
-        """
-        Descrip. :
-        """
         failed_msg = "Data collection failed!"
         self.current_dc_parameters["status"] = failed_msg
         self.current_dc_parameters["comments"] = "%s\n%s" % (
@@ -690,9 +681,6 @@ class BIOMAXCollect(DataCollect):
         self.update_data_collection_in_lims()
 
     def emit_collection_finished(self):
-        """
-        Descript. :
-        """
         if (
             self.current_dc_parameters["experiment_type"] in ("OSC", "Helical")
             and self.current_dc_parameters["oscillation_sequence"][0]["overlap"] == 0
@@ -808,9 +796,6 @@ class BIOMAXCollect(DataCollect):
             print(ex)
 
     def _store_image_in_lims_by_frame_num(self, frame, motor_position_id=None):
-        """
-        Descript. :
-        """
         # Dont save mesh first and last images
         # Mesh images (best positions) are stored after data analysis
         logging.getLogger("HWR").info(
@@ -839,9 +824,6 @@ class BIOMAXCollect(DataCollect):
         os.system(cmd)
 
     def _store_image_in_lims(self, frame_number, motor_position_id=None):
-        """
-        Descript. :
-        """
         if self.lims_client_hwobj:
             file_location = self.current_dc_parameters["fileinfo"]["directory"]
             image_file_template = self.current_dc_parameters["fileinfo"]["template"]
@@ -902,9 +884,6 @@ class BIOMAXCollect(DataCollect):
             return image_id
 
     def take_crystal_snapshots(self):
-        """
-        Descript. :
-        """
         if self.current_dc_parameters["take_snapshots"]:
             # snapshot_directory = self.current_dc_parameters["fileinfo"]["archive_directory"]
             # save the image to the data collection directory for the moment
@@ -958,9 +937,6 @@ class BIOMAXCollect(DataCollect):
                     time.sleep(1)  # needed, otherwise will get the same images
 
     def trigger_auto_processing(self, process_event, frame_number):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").info(
             "[COLLECT] triggering auto processing, self.current_dc_parameters: %s"
             % self.current_dc_parameters
@@ -978,26 +954,17 @@ class BIOMAXCollect(DataCollect):
             )
 
     def get_beam_centre(self):
-        """
-        Descript. :
-        """
         if self.resolution_hwobj is not None:
             return self.resolution_hwobj.get_beam_centre()
         else:
             return None, None
 
     def get_beam_shape(self):
-        """
-        Descript. :
-        """
         if self.beam_info_hwobj is not None:
             return self.beam_info_hwobj.get_beam_shape()
 
     @task
     def _take_crystal_snapshot(self, filename):
-        """
-        Descript. :
-        """
         # take image from server
         self.diffractometer_hwobj.camera_hwobj.takeSnapshot(filename)
 
@@ -1008,21 +975,12 @@ class BIOMAXCollect(DataCollect):
         self.detector_hwobj.set_roi_mode(value)
 
     def set_helical(self, helical_on):
-        """
-        Descript. :
-        """
         self.helical = helical_on
 
     def set_helical_pos(self, helical_oscil_pos):
-        """
-        Descript. :
-        """
         self.helical_pos = helical_oscil_pos
 
     def set_resolution(self, value):
-        """
-        Descript. :
-        """
         new_distance = self.resolution_hwobj.res2dist(value)
         self.move_detector(new_distance)
 
@@ -1046,9 +1004,6 @@ class BIOMAXCollect(DataCollect):
 
     @task
     def move_motors(self, motor_position_dict):
-        """
-        Descript. :
-        """
         self.diffractometer_hwobj.move_sync_motors(motor_position_dict)
 
     def create_file_directories(self):
@@ -1074,9 +1029,6 @@ class BIOMAXCollect(DataCollect):
             self.current_dc_parameters["auto_dir"] = auto_directory
 
     def prepare_input_files(self):
-        """
-        Descript. :
-        """
         i = 1
         logging.getLogger("user_level_log").info(
             "Creating XDS (MAXIV-BioMAX) processing input file directories"
@@ -1160,9 +1112,6 @@ class BIOMAXCollect(DataCollect):
             return self.dtox_hwobj.get_value()
 
     def get_detector_distance_limits(self):
-        """
-        Descript. :
-        """
         if self.dtox_hwobj is not None:
             return self.dtox_hwobj.get_limits()
 
@@ -1281,24 +1230,15 @@ class BIOMAXCollect(DataCollect):
         self.stop_display = True
 
     def get_transmission(self):
-        """
-        Descript. :
-        """
         return self.transmission_hwobj.get_value()
 
     def set_transmission(self, value):
-        """
-        Descript. :
-        """
         try:
             self.transmission_hwobj.set_value(float(value), True)
         except Exception as ex:
             raise Exception("cannot set transmission", ex)
 
     def get_undulators_gaps(self):
-        """
-        Descript. :
-        """
         try:
             chan = self.get_channel_object("undulator_gap")
             gap = "{:.2f}".format(chan.getValue())
@@ -1307,18 +1247,12 @@ class BIOMAXCollect(DataCollect):
             return None
 
     def get_slit_gaps(self):
-        """
-        Descript. :
-        """
         try:
             return self.beam_info_hwobj.get_beam_size()
         except:
             return None
 
     def get_machine_current(self):
-        """
-        Descript. :
-        """
         try:
             curr = self.machine_info_hwobj.get_current()
             curr = curr.split(" ")[0]  # remove units
@@ -1327,25 +1261,16 @@ class BIOMAXCollect(DataCollect):
             return None
 
     def get_machine_message(self):
-        """
-        Descript. :
-        """
         # todo
         return ""
 
     def get_machine_fill_mode(self):
-        """
-        Descript. :
-        """
         try:
             return self.machine_info_hwobj.getFillingMode()
         except:
             return ""
 
     def get_flux(self):
-        """
-        Descript. :
-        """
         try:
             flux = self.flux_hwobj.get_flux()
         except Exception:
@@ -1468,9 +1393,6 @@ class BIOMAXCollect(DataCollect):
         return self.resolution_hwobj.get_value_at_corner()
 
     def update_data_collection_in_lims(self):
-        """
-        Descript. :
-        """
         if self.lims_client_hwobj:
             # flux = self.get_flux()
             self.current_dc_parameters["flux"] = self.flux_before_collect

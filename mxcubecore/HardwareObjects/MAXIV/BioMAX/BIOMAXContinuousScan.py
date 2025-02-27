@@ -61,9 +61,6 @@ __status__ = "Production"
 
 class BIOMAXContinuousScan(AbstractEnergyScan):
     def __init__(self, name):
-        """
-        Descript. :
-        """
         AbstractEnergyScan.__init__(self, name)
         self.ready_event = None
         self.scan_data = None
@@ -74,9 +71,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         self.Eh = [6000, 9060.0, 12610.0, 17270.0, 20400, 25000]
 
     def init(self):
-        """
-        Descript. :
-        """
         self.ready_event = gevent.event.Event()
         self.energy_scan_parameters = {}
         self.xray_table = open(
@@ -135,7 +129,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         return (edge_energy, emission)
 
     def energy_scan_hook(self, energy_scan_parameters):
-        """ """
         self.initial_transmission_value = HWR.beamline.transmission.get_att_factor()
         self.initial_energy_value = HWR.beamline.energy.get_current_energy()
 
@@ -532,18 +525,12 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         )
 
     def cancel_energy_scan(self, *args):
-        """
-        Descript. :
-        """
         self.scan_command_aborted()
 
     def escan_cleanup(self):
         self.closure()
 
     def scan_command_failed(self, *args):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").error("BIOMAXEnergyScan: energy scan failed")
         self.energy_scan_parameters["endTime"] = time.strftime("%Y-%m-%d %H:%M:%S")
         logging.getLogger("HWR").info("Stopping Energy")
@@ -557,9 +544,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         self.ready_event.set()
 
     def scan_command_aborted(self, *args):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").error("BIOMAXEnergyScan: energy scan aborted")
         self.closure()
 
@@ -567,9 +551,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         self.ready_event.set()
 
     def closure(self):
-        """
-        Descript. :
-        """
         HWR.beamline.diffractometer.wait_device_ready()
         logging.getLogger("HWR").info("Closing fast shutter")
         HWR.beamline.diffractometer.close_fast_shutter()
@@ -613,9 +594,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
             logging.getLogger("HWR").error("Error saving txt data file: %s" % str(ex))
 
     def scan_command_finished(self, prefix, directory):
-        """
-        Descript. :
-        """
         self.energy_scan_parameters["endTime"] = time.strftime("%Y-%m-%d %H:%M:%S")
         logging.getLogger("HWR").debug("BIOMAXFlyEnergyScan: energy scan finished")
 
@@ -651,9 +629,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
 
     # Mad energies commands
     def getDefaultMadEnergies(self):
-        """
-        Descript. :
-        """
         energies = []
         try:
             for el in self["mad"]:
@@ -670,9 +645,6 @@ class BIOMAXContinuousScan(AbstractEnergyScan):
         return self.scan_data
 
     def store_energy_scan(self):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").info(
             "Storing EnergyScan info in ISPYB %r", self.energy_scan_parameters
         )

@@ -21,9 +21,6 @@ class EigerDetector(AbstractDetector):
     """
 
     def __init__(self, *args, **kwargs):
-        """
-        Descrip. :
-        """
         AbstractDetector.__init__(self, *args, **kwargs)
 
         self.device = None

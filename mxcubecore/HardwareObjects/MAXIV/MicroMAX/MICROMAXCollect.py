@@ -77,9 +77,6 @@ class MICROMAXCollect(DataCollect):
         self.ssx_mode = False
 
     def init(self):
-        """
-        Descript. :
-        """
         self.ready_event = gevent.event.Event()
         self.diffractometer_hwobj = self.get_object_by_role("diffractometer")
         self.lims_client_hwobj = self.get_object_by_role("dbserver")
@@ -776,9 +773,6 @@ class MICROMAXCollect(DataCollect):
             self.log.exception("Could not store images in lims")
 
     def store_image_in_lims_by_frame_num(self, frame, motor_position_id=None):
-        """
-        Descript. :
-        """
         # Dont save mesh first and last images
         # Mesh images (best positions) are stored after data analysis
         self.log.info("TODO: fix store_image_in_lims_by_frame_num method for nimages>1")
@@ -814,9 +808,6 @@ class MICROMAXCollect(DataCollect):
     def store_image_in_lims(
         self, frame_number, motor_position_id=None, collection=None
     ):
-        """
-        Descript. :
-        """
         if collection is None:
             collection = self.current_dc_parameters
         if self.lims_client_hwobj:
@@ -883,9 +874,6 @@ class MICROMAXCollect(DataCollect):
             return image_id
 
     def take_crystal_snapshots(self):
-        """
-        Descript. :
-        """
         if self.current_dc_parameters["take_snapshots"]:
             # snapshot_directory = self.current_dc_parameters["fileinfo"]["archive_directory"]
             # save the image to the data collection directory for the moment
@@ -935,9 +923,6 @@ class MICROMAXCollect(DataCollect):
                     time.sleep(1)  # needed, otherwise will get the same images
 
     def trigger_auto_processing(self, process_event, frame_number):
-        """
-        Descript. :
-        """
         self.log.info(
             "[COLLECT] triggering auto processing, self.current_dc_parameters: %s"
             % self.current_dc_parameters
@@ -969,26 +954,17 @@ class MICROMAXCollect(DataCollect):
                 self.log.exception("[COLLECT] Cannot generate crystfel input files")
 
     def get_beam_centre(self):
-        """
-        Descript. :
-        """
         if self.detector_hwobj is not None:
             return self.detector_hwobj.get_beam_position()
         else:
             return None, None
 
     def get_beam_shape(self):
-        """
-        Descript. :
-        """
         if self.beam_info_hwobj is not None:
             return self.beam_info_hwobj.get_beam_shape()
 
     @task
     def _take_crystal_snapshot(self, filename):
-        """
-        Descript. :
-        """
         # take image from server
         self.diffractometer_hwobj.camera.take_snapshot(filename)
 
@@ -999,21 +975,12 @@ class MICROMAXCollect(DataCollect):
         self.detector_hwobj.set_roi_mode(value)
 
     def set_helical(self, helical_on):
-        """
-        Descript. :
-        """
         self.helical = helical_on
 
     def set_helical_pos(self, helical_oscil_pos):
-        """
-        Descript. :
-        """
         self.helical_pos = helical_oscil_pos
 
     def set_resolution(self, value):
-        """
-        Descript. :
-        """
         new_distance = self.resolution_hwobj.resolution_to_distance(value)
         self.move_detector(new_distance)
 
@@ -1075,9 +1042,6 @@ class MICROMAXCollect(DataCollect):
             self.current_dc_parameters["auto_dir"] = auto_directory
 
     def prepare_input_files(self):
-        """
-        Descript. :
-        """
         i = 1
         self.user_log.info(
             "Creating (MAXIV-MicroMAX) processing input file directories"
@@ -1321,24 +1285,15 @@ class MICROMAXCollect(DataCollect):
         self.stop_display = True
 
     def get_transmission(self):
-        """
-        Descript. :
-        """
         return self.transmission_hwobj.get_value()
 
     def set_transmission(self, value):
-        """
-        Descript. :
-        """
         try:
             self.transmission_hwobj.set_value(float(value), True)
         except Exception as ex:
             raise Exception("cannot set transmission", ex)
 
     def get_undulators_gaps(self):
-        """
-        Descript. :
-        """
         try:
             chan = self.getChannelObject("undulator_gap")
             gap = "{:.2f}".format(chan.get_value())
@@ -1347,9 +1302,6 @@ class MICROMAXCollect(DataCollect):
             return None
 
     def get_slit_gaps(self):
-        """
-        Descript. :
-        """
         try:
             return self.beam_info_hwobj.get_beam_size()
         except Exception:
@@ -1381,9 +1333,6 @@ class MICROMAXCollect(DataCollect):
             return ""
 
     def get_flux(self):
-        """
-        Descript. :
-        """
         try:
             flux = self.flux_hwobj.get_flux()
         except Exception as ex:
@@ -1487,9 +1436,6 @@ class MICROMAXCollect(DataCollect):
         return self.resolution_hwobj.get_value_at_corner()
 
     def update_data_collection_in_lims(self):
-        """
-        Descript. :
-        """
         if self.lims_client_hwobj:
             # flux = self.get_flux()
             self.current_dc_parameters["flux"] = self.flux_before_collect

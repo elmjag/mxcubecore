@@ -171,9 +171,6 @@ class PrepareForNewSample:
     """
 
     def __call__(self, *args, **kw):
-        """
-        Descript.: prepare beamline for a new sample,
-        """
         logging.getLogger("HWR").info("Preparing beamline for a new sample.")
 
         if HWR.beamline.detector is not None:

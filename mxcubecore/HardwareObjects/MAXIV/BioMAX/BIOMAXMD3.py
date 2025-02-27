@@ -137,7 +137,6 @@ class BIOMAXMD3(MAXIVMD3):
         )
 
     def update_zoom_calibration(self):
-        """ """
         zoom = HWR.beamline.sample_view.camera.get_image_zoom()
         if zoom is not None:
             self.zoom_centre["x"] = self.zoom_centre["x"] * zoom
@@ -149,9 +148,6 @@ class BIOMAXMD3(MAXIVMD3):
         self.emit("pixelsPerMmChanged", ((self.pixels_per_mm_x, self.pixels_per_mm_y)))
 
     def manual_centring(self):
-        """
-        Descript. :
-        """
         self.update_zoom_calibration()
         self.centring_hwobj.initCentringProcedure()
         for click in range(3):

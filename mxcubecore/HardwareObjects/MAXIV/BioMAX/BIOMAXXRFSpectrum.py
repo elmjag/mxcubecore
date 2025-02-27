@@ -50,14 +50,7 @@ MAX_TRANSMISSION = 100
 
 
 class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
-    """
-    Descript.
-    """
-
     def __init__(self, name):
-        """
-        Descript. :
-        """
         AbstractXRFSpectrum.__init__(self, name)
         HardwareObject.__init__(self, name)
 
@@ -78,9 +71,6 @@ class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
         self.transmission_steps = [0.2, 0.4, 0.8, 1.6, 3, 6, 12, 24, 48, 96, 100]
 
     def init(self):
-        """
-        Descript. :
-        """
         self.ready_event = gevent.event.Event()
 
         self.energy_hwobj = HWR.beamline.energy
@@ -374,9 +364,6 @@ class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
             self.spectrum_command_aborted()
 
     def spectrum_command_finished(self):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").info("Sprectrum acquired, launching analysis")
 
         self.spectrum_info_dict["endTime"] = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -540,9 +527,6 @@ class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
         self.pandabox.OpenShutter()
 
     def open_safety_shutter(self):
-        """
-        Descript. :
-        """
         # todo add time out? if over certain time, then stop acquisiion and
         # popup an error message
         if self.safety_shutter_hwobj.get_state() == "opened":
@@ -561,9 +545,6 @@ class BIOMAXXRFSpectrum(AbstractXRFSpectrum, HardwareObject):
             raise Exception("Could not open the safety shutter")
 
     def store_xrf_spectrum(self):
-        """
-        Descript. :
-        """
         logging.getLogger("HWR").debug("XRFSpectrum info %r", self.spectrum_info_dict)
 
         try:

@@ -37,14 +37,7 @@ from mxcubecore.BaseHardwareObjects import HardwareObject
 
 
 class MAXIVAutoProcessing(HardwareObject):
-    """
-    Descript. :
-    """
-
     def __init__(self, name):
-        """
-        Descript. :
-        """
         HardwareObject.__init__(self, name)
         self.result = None
         self.autoproc_programs = None
@@ -80,9 +73,6 @@ class MAXIVAutoProcessing(HardwareObject):
         return spg_list
 
     def init(self):
-        """
-        Descript. :
-        """
         self.autoproc_programs = self["programs"]
         self.generate_xds_inp_user_path = self.get_property(
             "generate_xds_inp_user_path", self.generate_xds_inp_user_path
@@ -120,9 +110,6 @@ class MAXIVAutoProcessing(HardwareObject):
             self.spg_dict = self.read_spg_dictionary(spg_file=spg_dict_file)
 
     def execute_autoprocessing(self, process_event, params_dict, frame_number):
-        """
-        Descript. :
-        """
         auto_dir = params_dict["auto_dir"]
         xds_dir = params_dict["xds_dir"]
         data_path = params_dict["fileinfo"]["filename"]
@@ -449,9 +436,6 @@ class MAXIVAutoProcessing(HardwareObject):
             self.log.error("Could not store images in lims, error was {}".format(ex))
 
     def store_image_in_lims_by_frame_num(self, frame, motor_position_id=None):
-        """
-        Descript. :
-        """
         # Dont save mesh first and last images
         # Mesh images (best positions) are stored after data analysis
         self.log.info("TODO: fix store_image_in_lims_by_frame_num method for nimages>1")
@@ -557,9 +541,6 @@ class MAXIVAutoProcessing(HardwareObject):
     def store_image_in_lims(
         self, frame_number, motor_position_id=None, collection=None
     ):
-        """
-        Descript. :
-        """
         if collection is None:
             collection = self.current_dc_parameters
         if self.lims_client_hwobj:
