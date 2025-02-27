@@ -48,9 +48,6 @@ class MAXIVMD3(GenericDiffractometer):
     AUTOMATIC_CENTRING_IMAGES = 6
 
     def __init__(self, name):
-        """
-        Description:
-        """
         GenericDiffractometer.__init__(self, name=name)
         # Compatibility line
         self.C3D_MODE = GenericDiffractometer.CENTRING_METHOD_AUTO
@@ -262,9 +259,6 @@ class MAXIVMD3(GenericDiffractometer):
     ## ------------------------------- ##
 
     def current_phase_changed(self, current_phase):
-        """
-        Descript. :
-        """
         self.current_phase = current_phase
         logging.getLogger("HWR").info("MD3 phase changed to %s" % current_phase)
         self.emit("phaseChanged", (current_phase,))
@@ -289,9 +283,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.emit("minidiffStateChanged", (self.current_state))
 
     def motor_state_changed(self, state):
-        """
-        Descript. :
-        """
         self.emit("minidiffStateChanged", (state,))
 
     def open_fast_shutter(self, timeout=2):
@@ -378,10 +369,6 @@ class MAXIVMD3(GenericDiffractometer):
     ## ------------------------------- ##
 
     def find_loop(self):
-        """
-        Description:
-        """
-
         self.camera = HWR.beamline.sample_view.camera
         img_buf, w, h = self.camera.get_image_array()
 
@@ -415,10 +402,6 @@ class MAXIVMD3(GenericDiffractometer):
         return self.pixels_per_mm_x, self.pixels_per_mm_y
 
     def manual_centring(self):
-        """
-        Descript. :
-        """
-
         self.centring_hwobj.initCentringProcedure()
         for click in range(3):
             self.user_clicked_event = gevent.event.AsyncResult()
@@ -531,9 +514,6 @@ class MAXIVMD3(GenericDiffractometer):
         return centred_pos
 
     def omega_reference_add_constraint(self):
-        """
-        Descript. :
-        """
         if self.omega_reference_par is None or self.beam_position is None:
             return
         if self.omega_reference_par["camera_axis"].lower() == "x":
@@ -555,9 +535,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.centring_hwobj.appendMotorConstraint(self.omega_reference_motor, on_beam)
 
     def omega_reference_motor_moved(self, pos):
-        """
-        Descript. :
-        """
         if self.omega_reference_par["camera_axis"].lower() == "x":
             pos = (
                 self.omega_reference_par["direction"]
@@ -577,9 +554,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.emit("omegaReferenceChanged", (self.reference_pos,))
 
     def refresh_omega_reference_position(self):
-        """
-        Descript. :
-        """
         if self.omega_reference_motor is not None:
             reference_pos = self.omega_reference_motor.getPosition()
             self.omega_reference_motor_moved(reference_pos)
@@ -615,9 +589,6 @@ class MAXIVMD3(GenericDiffractometer):
         self.wait_device_ready(5)
 
     def motor_positions_to_screen(self, centred_positions_dict):
-        """
-        Descript. :
-        """
         c = centred_positions_dict
         xy = self.centring_hwobj.centringToScreen(c)
         x = xy["X"] * self.pixels_per_mm_x + self.zoom_centre["x"]
@@ -824,7 +795,6 @@ class MAXIVMD3(GenericDiffractometer):
                 raise RuntimeError(msg)
 
     def move_to_motors_positions(self, motors_positions, wait=False):
-        """ """
         try:
             motors_positions.pop("zoom")
         except:
@@ -903,9 +873,6 @@ class MAXIVMD3(GenericDiffractometer):
             logging.getLogger("HWR").exception("MD3: could not move to beam.")
 
     def get_centred_point_from_coord(self, x, y, return_by_names=None):
-        """
-        Descript. :
-        """
         self.centring_hwobj.initCentringProcedure()
         self.centring_hwobj.appendCentringDataPoint(
             {
@@ -937,9 +904,6 @@ class MAXIVMD3(GenericDiffractometer):
         log.warning("[MAXIVMD3]: all tasks aborted")
 
     def move_omega_relative(self, relative_angle):
-        """
-        Descript. :
-        """
         self.phi_motor_hwobj.set_value_relative(relative_angle, 10)
 
     def is_ready(self):

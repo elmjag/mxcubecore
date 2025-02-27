@@ -9,8 +9,6 @@ from mxcubecore.HardwareObjects.abstract.AbstractNState import (
 
 
 class BIOMAXZoom(AbstractNState):
-    """BIOMAXMicrodiffZoom class"""
-
     def __init__(self, name):
         AbstractNState.__init__(self, name)
 
