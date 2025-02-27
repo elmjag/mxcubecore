@@ -164,8 +164,7 @@ class PrepareOpenHutch:
 
 
 class PrepareForNewSample:
-    """
-    Prepare beamline for a new sample
+    """Prepare beamline for a new sample.
 
     Close safety shutter, close detector cover and move detector to a safe area
     """
@@ -194,10 +193,7 @@ class PrepareForNewSample:
 
 
 class CalculateFlux:
-    """
-    Calculate Flux
-
-    """
+    """Calculate Flux."""
 
     def __call__(self, *args, **kw):
         logging.getLogger("HWR").info("Calculating Flux!")

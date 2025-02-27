@@ -30,7 +30,7 @@ ARRAY_SEPARATOR = ""
 
 
 class MAXIVMD3(GenericDiffractometer):
-    """Diffractometer calss to control motors and functoinality of MD3"""
+    """Diffractometer class to control motors and functionality of MD3."""
 
     MOTOR_TO_EXPORTER_NAME = {
         "focus": "AlignmentX",
