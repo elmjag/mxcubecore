@@ -34,17 +34,24 @@ class Prefix(BaseModel):
         This method will fill in optional configuration properties for a channel.
         """
 
-        if self.channels is None:
-            return []
+        def setup_channel_config(channel_name, channel_config):
+            """Set-up channel config model object
 
-        for channel_name, channel_config in self.channels.items():
+            Deals with filling in optional configuration properties.
+            """
             if channel_config is None:
-                channel_config = Channel()  # noqa: PLW2901
+                channel_config = Channel()
 
             if channel_config.suffix is None:
                 channel_config.suffix = channel_name
 
-            yield channel_name, channel_config
+            return channel_config
+
+        if self.channels is None:
+            return []
+
+        for channel_name, channel_config in self.channels.items():
+            yield channel_name, setup_channel_config(channel_name, channel_config)
 
 
 class EpicsConfig(RootModel[Dict[str, Prefix]]):

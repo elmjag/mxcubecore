@@ -42,17 +42,25 @@ class Device(BaseModel):
 
         This method will fill in optional configuration properties for commands.
         """
-        if self.commands is None:
-            return []
 
-        for command_name, command_config in self.commands.items():
+        def setup_command_config(command_name, command_config):
+            """Set-up command config model object
+
+            Deals with filling in optional configuration properties.
+            """
             if command_config is None:
-                command_config = Command()  # noqa: PLW2901
+                command_config = Command()
 
             if command_config.name is None:
                 command_config.name = command_name
 
-            yield command_name, command_config
+            return command_config
+
+        if self.commands is None:
+            return []
+
+        for command_name, command_config in self.commands.items():
+            yield command_name, setup_command_config(command_name, command_config)
 
     def get_channels(self) -> Iterable[Tuple[str, Channel]]:
         """Get all channels configured for this device.
