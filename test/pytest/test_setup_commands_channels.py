@@ -8,8 +8,8 @@ exporter and EPICS works.
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+from unittest import mock
 
-import mock
 import pytest
 
 from mxcubecore.BaseHardwareObjects import HardwareObject
@@ -60,7 +60,6 @@ def _get_data_path(filename: str) -> Path:
 
 
 def _parse_yaml_config(filename: str):
-
     with _get_data_path(filename).open() as f:
         return yaml_parser.load(f)
 
