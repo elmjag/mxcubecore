@@ -101,17 +101,9 @@ class MaxIVSession(Session):
 
         return directory
 
-    def prepare_directories(self, proposal_info):
-        log.info(
-            "[MAX IV Session] Preparing Data directory for proposal %s" % proposal_info
-        )
-        start_time = proposal_info.get("Session")[0].get("startDate")
-
-        if start_time:
-            start_date = start_time.split(" ")[0].replace("-", "")
-        else:
-            start_date = time.strftime("%Y%m%d")
-
+    def prepare_directories(self, session):
+        log.info(f"[MAX IV Session] Preparing Data directory for session: {session}")
+        start_date = session.start_datetime.date().isoformat().replace("-", "")
         self.set_session_start_date(start_date)
 
         # this checks that the beamline data path has been properly created
@@ -129,15 +121,18 @@ class MaxIVSession(Session):
             category = "visitors"
 
         try:
-            self.storage = storage.Storage(category, self.endstation_name)
+            self.storage = storage.Storage(
+                user_type=category, beamline=self.endstation_name
+            )
         except Exception as ex:
             print(ex)
-            # this creates the path for the data and ensures proper permissions.
-            # e.g. /data/visitors/biomax/<proposal>/<visit>/{raw, process}
+
+        # This creates the path for the data and ensures proper permissions
+        # e.g. /data/visitors/biomax/<proposal>/<visit>/{raw, process}
         if self.is_commissioning:
             group = self.beamline_name.lower()
         else:
-            group = self.storage.get_proposal_group(self.proposal_number)
+            group = self.storage.get_proposal_group(session.number)
         try:
             _raw_path = self.storage.create_path(
                 self.proposal_number, group, self.get_session_start_date()
