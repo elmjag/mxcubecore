@@ -95,14 +95,15 @@ class MaxIVSession(Session):
             )
 
         log.info(
-            "[MAX IV Session] Data directory for proposal %s: %s"
-            % (self.get_proposal(), directory)
+            "[MAX IV Session] Data directory for proposal %s: %s",
+            self.get_proposal(),
+            directory,
         )
 
         return directory
 
     def prepare_directories(self, session):
-        log.info(f"[MAX IV Session] Preparing Data directory for session: {session}")
+        log.info("[MAX IV Session] Preparing Data directory for session: %s", session)
         start_date = session.start_datetime.date().isoformat().replace("-", "")
         self.set_session_start_date(start_date)
 
@@ -110,9 +111,7 @@ class MaxIVSession(Session):
         # e.g. /data/visitors/biomax
         _proposal = self.get_proposal()
 
-        log.info(
-            "[MAX IV Session] Preparing Data directory for proposal %s" % _proposal
-        )
+        log.info("[MAX IV Session] Preparing Data directory for proposal %s", _proposal)
         if self.is_commissioning:
             category = "staff"
         elif self.is_proprietary(_proposal):
@@ -138,10 +137,9 @@ class MaxIVSession(Session):
                 self.proposal_number, group, self.get_session_start_date()
             )
 
-            log.info("[MAX IV Session] SDM Data directory created: %s" % _raw_path)
-        except Exception as ex:
-            msg = "[MAX IV Session] SDM Data directory creation failed. %s" % ex
-            log.warning(msg)
+            log.info("[MAX IV Session] SDM Data directory created: %s", _raw_path)
+        except Exception:
+            log.exception("[MAX IV Session] SDM Data directory creation failed.")
             log.info(
                 "[MAX IV Session] SDM Data directory trying to "
                 "create again after failure"
@@ -152,19 +150,17 @@ class MaxIVSession(Session):
                     self.proposal_number, group, self.get_session_start_date()
                 )
 
-                log.info("[MAX IV Session] SDM Data directory created: %s" % _raw_path)
-            except Exception as ex:
-                msg = "[MAX IV Session] SDM Data directory creation failed. %s" % ex
-                log.error(msg)
+                log.info("[MAX IV Session] SDM Data directory created: %s", _raw_path)
+            except Exception:
+                msg = "[MAX IV Session] SDM Data directory creation failed."
+                log.exception(msg)
                 raise Exception(msg)
 
         if self.base_archive_directory:
             archive_folder = "{}/{}".format(category, self.beamline_name.lower())
             PathTemplate.set_archive_path(self.base_archive_directory, archive_folder)
             _archive_path = os.path.join(self.base_archive_directory, archive_folder)
-            log.info(
-                "[MAX IV Session] Archive directory configured: %s" % _archive_path
-            )
+            log.info("[MAX IV Session] Archive directory configured: %s", _archive_path)
 
     def is_proprietary(self, proposal_number=None):
         """
