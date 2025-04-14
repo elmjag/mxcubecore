@@ -138,8 +138,8 @@ class MaxIVSession(Session):
             )
 
             log.info("[MAX IV Session] SDM Data directory created: %s", _raw_path)
-        except Exception:
-            log.exception("[MAX IV Session] SDM Data directory creation failed.")
+        except Exception as exc:
+            log.warning("[MAX IV Session] SDM Data directory creation failed. %s", exc)
             log.info(
                 "[MAX IV Session] SDM Data directory trying to "
                 "create again after failure"
