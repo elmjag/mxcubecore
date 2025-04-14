@@ -134,7 +134,7 @@ class MaxIVSession(Session):
             group = self.storage.get_proposal_group(session.number)
         try:
             _raw_path = self.storage.create_path(
-                self.proposal_number, group, self.get_session_start_date()
+                session.number, group, self.get_session_start_date()
             )
 
             log.info("[MAX IV Session] SDM Data directory created: %s", _raw_path)
@@ -147,7 +147,7 @@ class MaxIVSession(Session):
             time.sleep(0.1)
             try:
                 _raw_path = self.storage.create_path(
-                    self.proposal_number, group, self.get_session_start_date()
+                    session.number, group, self.get_session_start_date()
                 )
 
                 log.info("[MAX IV Session] SDM Data directory created: %s", _raw_path)
