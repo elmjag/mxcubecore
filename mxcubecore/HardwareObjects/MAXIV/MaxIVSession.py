@@ -123,8 +123,8 @@ class MaxIVSession(Session):
             self.storage = storage.Storage(
                 user_type=category, beamline=self.endstation_name
             )
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            log.exception("error setting up SDM")
 
         # This creates the path for the data and ensures proper permissions
         # e.g. /data/visitors/biomax/<proposal>/<visit>/{raw, process}
