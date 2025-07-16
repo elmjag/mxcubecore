@@ -1,0 +1,40 @@
+"""Custom MicroMAX Beamline object.
+
+Extends MAXIV beamline object with MicroMAX specfic configurables.
+"""
+
+from enum import Enum
+
+from mxcubecore.HardwareObjects.MAXIV.MAXIVBeamline import MAXIVBeamline
+
+
+class SampleDelivery(Enum):
+    osc = "osc"
+    hve = "hve"
+
+
+class Beamline(MAXIVBeamline):
+    def __init__(self, name):
+        super().__init__(name)
+
+        # 'cached' Sample Delivery mode config
+        self._sample_delivery = None
+
+    #
+    # 'sample_delivery' config
+    #
+
+    def _load_sample_delivery(self):
+        val = self.get_property("sample_delivery", SampleDelivery.osc.value)
+        self._sample_delivery = SampleDelivery(val)
+
+    @property
+    def sample_delivery(self) -> SampleDelivery:
+        if self._sample_delivery is None:
+            self._load_sample_delivery()
+
+        return self._sample_delivery
+
+    def is_hve_sample_delivery(self) -> bool:
+        """True when HVE sample delivery mode is configured."""
+        return self.sample_delivery == SampleDelivery.hve
