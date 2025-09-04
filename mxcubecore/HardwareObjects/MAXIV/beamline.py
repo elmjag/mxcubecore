@@ -18,12 +18,10 @@ Example of ``emulate`` configuration::
       detector_motion: true
 """
 
-# ruff: noqa: N999
-
-from mxcubecore.HardwareObjects.Beamline import Beamline
+import mxcubecore.HardwareObjects.Beamline
 
 
-class MAXIVBeamline(Beamline):
+class Beamline(mxcubecore.HardwareObjects.Beamline.Beamline):
     def emulate(self, feature: str) -> bool:
         """Check if some feature should be emulated."""
         emulate = self.get_property("emulate", {})

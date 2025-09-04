@@ -5,7 +5,7 @@ Extends MAXIV beamline object with MicroMAX specfic configurables.
 
 from enum import Enum
 
-from mxcubecore.HardwareObjects.MAXIV.MAXIVBeamline import MAXIVBeamline
+import mxcubecore.HardwareObjects.MAXIV.beamline
 
 
 class SampleDelivery(Enum):
@@ -13,7 +13,7 @@ class SampleDelivery(Enum):
     hve = "hve"
 
 
-class Beamline(MAXIVBeamline):
+class Beamline(mxcubecore.HardwareObjects.MAXIV.beamline.Beamline):
     def __init__(self, name):
         super().__init__(name)
 
