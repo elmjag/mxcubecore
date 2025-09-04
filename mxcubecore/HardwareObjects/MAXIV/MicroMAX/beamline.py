@@ -1,6 +1,17 @@
 """Custom MicroMAX Beamline object.
 
-Extends MAXIV beamline object with MicroMAX specfic configurables.
+Adds support for `sample_delivery` configurable, which
+specifies the sample delivery mode for MXCuBE.
+
+Following sample delivery modes are supported:
+
+* osc - Oscillation sample delivery
+* hve - HVE (injector) sample delivery
+
+Example of `sample_delivery` configuration::
+
+  configuration:
+    sample_delivery: osc
 """
 
 from enum import Enum
