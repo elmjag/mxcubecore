@@ -122,7 +122,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
             )
 
             self.log.info("SDM Data directory created: %s", _raw_path)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self.log.warning("SDM Data directory creation failed. %s", exc)
             self.log.info("SDM Data directory trying to create again after failure")
             time.sleep(0.1)

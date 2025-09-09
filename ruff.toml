@@ -3384,9 +3384,6 @@ convention = "google"
     "TRY003",
     "TRY400",
 ]
-"mxcubecore/HardwareObjects/MAXIV/session.py" = [
-    "BLE001",
-]
 "mxcubecore/HardwareObjects/MAXIV/SciCatPlugin.py" = [
     "PERF203",
     "N803",
