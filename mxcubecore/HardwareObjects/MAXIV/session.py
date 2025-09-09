@@ -58,7 +58,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
         _proposal = self.get_proposal()
 
         if not self.is_commissioning:
-            if self.is_proprietary(_proposal):
+            if self.is_proprietary():
                 directory = Path(
                     self.base_directory,
                     "proprietary",
@@ -97,14 +97,10 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
         start_date = session.start_datetime.date().isoformat().replace("-", "")
         self.set_session_start_date(start_date)
 
-        # this checks that the beamline data path has been properly created
-        # e.g. /data/visitors/biomax
-        _proposal = self.get_proposal()
-
-        self.log.info("Preparing Data directory for proposal %s", _proposal)
+        self.log.info("Preparing Data directory for proposal %s", self.get_proposal())
         if self.is_commissioning:
             category = "staff"
-        elif self.is_proprietary(_proposal):
+        elif self.is_proprietary():
             category = "proprietary"
         else:
             category = "visitors"
@@ -149,12 +145,9 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
             _archive_path = Path(self.base_archive_directory, archive_folder)
             self.log.info("Archive directory configured: %s", _archive_path)
 
-    def is_proprietary(self, proposal_number=None):
+    def is_proprietary(self):
         """
         Determines if a given proposal is considered to be proprietary.
-
-        :param proposal_number: Proposal number
-        :type proposal_number: str
 
         :returns: True if the proposal is proprietary, otherwise False.
         :rtype: bool
