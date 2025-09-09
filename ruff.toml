@@ -3385,8 +3385,6 @@ convention = "google"
     "TRY400",
 ]
 "mxcubecore/HardwareObjects/MAXIV/session.py" = [
-    "TRY003",
-    "EM101",
     "BLE001",
     "B904",
     "TRY002",

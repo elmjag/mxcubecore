@@ -5,15 +5,10 @@ MAXIV Session hardware object.
 import os
 import time
 
+from sdm import storage
+
 import mxcubecore.HardwareObjects.Session
 from mxcubecore.model.queue_model_objects import PathTemplate
-
-try:
-    from sdm import (
-        storage,
-    )
-except ImportError:
-    raise Exception("Cannot import SDM library.")
 
 
 class Session(mxcubecore.HardwareObjects.Session.Session):
