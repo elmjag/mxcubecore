@@ -1,6 +1,4 @@
-"""
-MAXIV Session hardware object.
-"""
+"""MAXIV Session hardware object."""
 
 import time
 from pathlib import Path
@@ -25,11 +23,10 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
         self.proposal_number = proposal_info["Proposal"]["number"]
         self.is_commissioning = True
 
-    def get_proposal(self):
+    def get_proposal(self) -> str:
         """
-        :returns: The proposal, 'local-user' if no proposal is
-                  available
-        :rtype: str
+        Returns:
+            The proposal, 'local-user' if no proposal is available
         """
         proposal = "local-user"
 
@@ -42,13 +39,14 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
         return proposal
 
     def get_base_data_directory(self) -> str:
-        """
-        Returns the base data directory taking the 'contextual'
-        information into account, such as if the current user
-        is inhouse.
+        """Get base data directory.
 
-        :returns: The base data path.
-        :rtype: str
+        Figure out the base data directory taking the 'contextual'
+        information into account, such as if the current user
+        is in-house.
+
+        Returns:
+            The base data path.
         """
         # /data/(user-type)/(beamline)/(proposal)/(visit)/raw
         if self.session_start_date:
@@ -145,12 +143,11 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
             _archive_path = Path(self.base_archive_directory, archive_folder)
             self.log.info("Archive directory configured: %s", _archive_path)
 
-    def is_proprietary(self):
-        """
-        Determines if a given proposal is considered to be proprietary.
+    def is_proprietary(self) -> bool:
+        """Determines if current proposal is considered to be proprietary.
 
-        :returns: True if the proposal is proprietary, otherwise False.
-        :rtype: bool
+        Returns:
+            True if the proposal is proprietary, otherwise False.
         """
         return self.proposal_code == "IN"
 
