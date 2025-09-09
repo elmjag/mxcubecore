@@ -133,9 +133,8 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
 
                 self.log.info("SDM Data directory created: %s", _raw_path)
             except Exception:
-                msg = "SDM Data directory creation failed."
-                self.log.exception(msg)
-                raise Exception(msg)
+                self.log.exception("SDM Data directory creation failed.")
+                raise
 
         if self.base_archive_directory:
             archive_folder = "{}/{}".format(category, self.beamline_name.lower())
