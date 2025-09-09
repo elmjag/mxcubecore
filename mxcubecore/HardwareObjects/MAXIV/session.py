@@ -6,8 +6,7 @@ import logging
 import os
 import time
 
-from Session import Session
-
+import mxcubecore.HardwareObjects.Session
 from mxcubecore.model.queue_model_objects import PathTemplate
 
 try:
@@ -20,7 +19,7 @@ except ImportError:
 log = logging.getLogger("HWR")
 
 
-class MaxIVSession(Session):
+class Session(mxcubecore.HardwareObjects.Session.Session):
     def init(self):
         super().init()
         self.is_commissioning = False

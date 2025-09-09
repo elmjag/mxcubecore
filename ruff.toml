@@ -3270,23 +3270,6 @@ convention = "google"
     "TRY400",
     "TRY401",
 ]
-"mxcubecore/HardwareObjects/MAXIV/MaxIVSession.py" = [
-    "ARG002",
-    "B904",
-    "BLE001",
-    "COM812",
-    "EM101",
-    "G002",
-    "N999",
-    "PTH118",
-    "RET505",
-    "SIM103",
-    "SIM108",
-    "T201",
-    "TRY002",
-    "TRY003",
-    "TRY400",
-]
 "mxcubecore/HardwareObjects/MAXIV/MD3UpCamera.py" = [
     "ARG002",
     "COM812",
@@ -3400,6 +3383,15 @@ convention = "google"
     "SIM105",
     "TRY003",
     "TRY400",
+]
+"mxcubecore/HardwareObjects/MAXIV/session.py" = [
+    "TRY003",
+    "EM101",
+    "BLE001",
+    "B904",
+    "TRY002",
+    "PTH118",
+    "ARG002",
 ]
 "mxcubecore/HardwareObjects/MAXIV/SciCatPlugin.py" = [
     "PERF203",
