@@ -2,8 +2,8 @@
 MAXIV Session hardware object.
 """
 
-import os
 import time
+from pathlib import Path
 
 from sdm import storage
 
@@ -41,7 +41,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
 
         return proposal
 
-    def get_base_data_directory(self):
+    def get_base_data_directory(self) -> str:
         """
         Returns the base data directory taking the 'contextual'
         information into account, such as if the current user
@@ -59,7 +59,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
 
         if not self.is_commissioning:
             if self.is_proprietary(_proposal):
-                directory = os.path.join(
+                directory = Path(
                     self.base_directory,
                     "proprietary",
                     self.beamline_name.lower(),
@@ -67,17 +67,16 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
                     start_time,
                 )
             else:
-                directory = os.path.join(
+                directory = Path(
                     self.base_directory,
                     "visitors",
                     self.beamline_name.lower(),
                     _proposal,
                     start_time,
                 )
-
         else:
             # /data/staff/biomax/commissioning/date
-            directory = os.path.join(
+            directory = Path(
                 self.base_directory,
                 "staff",
                 self.beamline_name.lower(),
@@ -91,7 +90,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
             directory,
         )
 
-        return directory
+        return str(directory)
 
     def prepare_directories(self, session):
         self.log.info("Preparing Data directory for session: %s", session)
@@ -147,7 +146,7 @@ class Session(mxcubecore.HardwareObjects.Session.Session):
         if self.base_archive_directory:
             archive_folder = "{}/{}".format(category, self.beamline_name.lower())
             PathTemplate.set_archive_path(self.base_archive_directory, archive_folder)
-            _archive_path = os.path.join(self.base_archive_directory, archive_folder)
+            _archive_path = Path(self.base_archive_directory, archive_folder)
             self.log.info("Archive directory configured: %s", _archive_path)
 
     def is_proprietary(self, proposal_number=None):
