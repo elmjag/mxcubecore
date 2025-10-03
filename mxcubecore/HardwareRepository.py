@@ -79,7 +79,19 @@ _instance = None
 TIMERS = []
 
 beamline = None
-BEAMLINE_CONFIG_FILE = "beamline_config.yml"
+BEAMLINE_CONFIG_FILES = ["beamline_config.yaml", "beamline_config.yml"]
+
+
+class BeamlineConfigNotFound(Exception):
+    def __init__(self, lookup_paths: list[str]):
+        super().__init__("Beamline config file not found.")
+        self.lookup_paths = lookup_paths
+
+    def details(self):
+        conf_name = ", ".join(BEAMLINE_CONFIG_FILES)
+        paths = ", ".join(self.lookup_paths)
+
+        return f"Could not find {conf_name} in following repository paths:\n{paths}"
 
 
 def load_from_yaml(
@@ -395,7 +407,7 @@ def init_hardware_repository(
     _instance = __HardwareRepositoryClient(configuration_path)
     _instance.connect()
     beamline = load_from_yaml(
-        BEAMLINE_CONFIG_FILE,
+        _instance.find_beamline_config_file(),
         role="beamline",
         yaml_export_directory=yaml_export_directory,
     )
@@ -454,6 +466,14 @@ class __HardwareRepositoryClient:
             self.server = None
         finally:
             self.__connected = True
+
+    def find_beamline_config_file(self):
+        for file_name in BEAMLINE_CONFIG_FILES:
+            file = self.find_in_repository(file_name)
+            if file is not None:
+                return Path(file).name
+
+        raise BeamlineConfigNotFound(self.server_address)
 
     def find_in_repository(self, relative_path):
         """Finds absolute path of a file or directory matching relativePath
